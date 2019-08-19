@@ -9,8 +9,34 @@
     [alloc-ui.ajax :as ajax]
     [alloc-ui.events]
     [reitit.core :as reitit]
-    [clojure.string :as string])
+    [clojure.string :as string]
+    [alloc-ui.start-up :as start-up])
   (:import goog.History))
+
+
+(def current-grid [[#{:a} #{} #{} #{} #{}]
+                   [#{:a} #{} #{} #{} #{}]
+                   [#{} #{:b} #{:b} #{} #{}]
+                   [#{} #{:c} #{:c} #{} #{}]
+                   [#{} #{} #{} #{} #{}]])
+
+(def potential-grid [[#{:a} #{} #{:e} #{:e} #{}]
+                     [#{:a} #{} #{} #{} #{:f}]
+                     [#{} #{:b} #{:b} #{} #{:g}]
+                     [#{} #{:c} #{:c} #{} #{}]
+                     [#{:d} #{:d} #{} #{} #{}]])
+
+(def color-match {:a ["green" "white"] :b ["blue" "white"] :c ["orange" "white"]
+                  :d ["grey" "white"] :e ["cornflowerblue" "white"] :f ["darkcyan" "white"]
+                  :g ["goldenrod" "black"] :j [] :k [] :l []})
+
+(def requests {:j #{[0 0] [[1 2 3] 1]}
+               :k #{[0 1] [3 0]}
+               :l #{[[2 3] #{0 1 2}]}})
+;:m #{[[2 3] #{0 1 2}]}
+;:n #{[[2 3] #{0 1 2}]}
+;:o #{[[2 3] #{0 1 2}]}})
+
 
 (defn nav-link [uri title page]
   [:a.navbar-item
@@ -20,58 +46,119 @@
 
 (defn navbar []
   (r/with-let [expanded? (r/atom false)]
-    [:nav.navbar.is-info>div.container
-     [:div.navbar-brand
-      [:a.navbar-item {:href "/" :style {:font-weight :bold}} "alloc-ui"]
-      [:span.navbar-burger.burger
-       {:data-target :nav-menu
-        :on-click #(swap! expanded? not)
-        :class (when @expanded? :is-active)}
-       [:span][:span][:span]]]
-     [:div#nav-menu.navbar-menu
-      {:class (when @expanded? :is-active)}
-      [:div.navbar-end
-       [nav-link "#/" "Home" :home]
-       [nav-link "#/about" "About" :about]]]]))
+              [:nav.navbar.is-info>div.container
+               [:div.navbar-brand
+                [:a.navbar-item {:href "/" :style {:font-weight :bold}} "BLACK HAMMER - alloc-ui"]
+                [:span.navbar-burger.burger
+                 {:data-target :nav-menu
+                  :on-click    #(swap! expanded? not)
+                  :class       (when @expanded? :is-active)}
+                 [:span] [:span] [:span]]]
+               [:div#nav-menu.navbar-menu
+                {:class (when @expanded? :is-active)}
+                [:div.navbar-end
+                 [nav-link "#/" "Home" :home]
+                 [nav-link "#/about" "About" :about]]]]))
 
 (defn about-page []
   [:section.section>div.container>div.content
    [:img {:src "/img/warning_clojure.png"}]])
 
+(defn footer []
+  [:footer.is-size-7.has-text-right.has-text-grey-light
+   {:style {:padding "0rem 3rem"}}
+   "Black Hammer. Copyright 2019, Northrop Grumman"])
+
+
+
+(defn request-grid [requests]
+  (let [selected (r/atom (zipmap (keys requests) (repeat false)))]
+    (fn []
+      [:div.container
+       [:p " selected = " @selected]
+       [:table-container
+        [:table
+         [:thead
+          [:tr [:th "Include?"] [:th "Requestor"] [:th "Requests"]]]
+         [:tbody
+          (doall
+            (for [[k r] (seq requests)]
+              ^{:key k}
+              [:tr
+               [:td {:on-click #(do
+                                  (prn "clicked!")
+                                  (swap! selected assoc k (not (k @selected))))}
+                (if (k @selected)
+                  [:span.icon.has-text-success.is-small [:i.material-icons :done]]
+                  [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
+               [:td (str k)]
+               (let [txt (for [a r] (str a "     "))]
+                 [:td txt])]))]]]])))
+
+
+
+#_[:input {:type "text"} txt]
+
+
+
+
+(defn allocation-grid [grid color-match]
+  (let [w (count (first grid))
+        h (count grid)]
+    [:table.is-hoverable
+     [:thead
+      [:tr [:th ""]
+       (for [x (range w)] ^{:key x} [:th.has-text-centered x])]]
+     [:tbody
+      (for [y (range h)]
+        ^{:key y}
+        [:tr [:th (str y)]
+         (for [x (range w)]
+           (let [t (first (get-in grid [y x]))]
+             (if (nil? t)
+               ^{:key (str x "-" 0)} [:td ""]
+               ^{:key (str x "-" t)} [:td.has-text-centered
+                                      {:style {:background-color (first (t color-match))
+                                               :color            (second (t color-match))}}
+                                      (str t)])))])]]))
+
+
+
 (defn home-page []
-  [:section.section>div.container>div.content
-   (when-let [docs @(rf/subscribe [:docs])]
-     [:div {:dangerouslySetInnerHTML {:__html (md->html docs)}}])])
+  [:section.section {:style {:padding "0.5rem 1.5rem"}}
+   [:div.container
+    [:section.hero.is-bold.is-primary
+     [:div.hero-body {:style {:padding "1rem 1.5rem"}}
+      [:h1.title "Black Hammer"]
+      [:p.subtitle.is-size-7 "Copyright 2019, Northrop Grumman"]]]]
+   [:div.content {:style {:padding "1rem 3rem"}}
+    [:p.title.is-4 "Your Requests"]
+    [request-grid requests]
+    [:div.content
+     [:a.button.is-primary {:on-click #()} "Submit"]]]
+   [:div.content {:style {:padding "0.70rem 3rem"}}
+    [:div.tile.is-ancestor
+     [:div.tile.is-4
+      [:div.container
+       [:p.title.is-5.has-text-centered "Current Allocation"]
+       [allocation-grid current-grid color-match]]]
+     [:div.tile.is-3]
+     [:div.tile.is-4
+      [:div.container
+       [:p.title.is-5.has-text-centered "Potential Allocation"]
+       [allocation-grid potential-grid color-match]]]]]])
+
+
 
 (def pages
-  {:home #'home-page
+  {:home  #'home-page
    :about #'about-page})
 
 (defn page []
   [:div
-   [navbar]
+   ;[navbar]
    [(pages @(rf/subscribe [:page]))]])
 
-;; -------------------------
-;; Routes
-
-(def router
-  (reitit/router
-    [["/" :home]
-     ["/about" :about]]))
-
-;; -------------------------
-;; History
-;; must be called after routes have been defined
-(defn hook-browser-navigation! []
-  (doto (History.)
-    (events/listen
-      HistoryEventType/NAVIGATE
-      (fn [event]
-        (let [uri (or (not-empty (string/replace (.-token event) #"^.*#" "")) "/")]
-          (rf/dispatch
-            [:navigate (reitit/match-by-path router uri)]))))
-    (.setEnabled true)))
 
 ;; -------------------------
 ;; Initialize app
@@ -79,10 +166,10 @@
   (rf/clear-subscription-cache!)
   (r/render [#'page] (.getElementById js/document "app")))
 
+
 (defn init! []
-  (rf/dispatch-sync [:navigate (reitit/match-by-name router :home)])
-  
+  (rf/dispatch-sync [:navigate (reitit/match-by-name start-up/router :home)])
   (ajax/load-interceptors!)
   (rf/dispatch [:fetch-docs])
-  (hook-browser-navigation!)
+  (start-up/hook-browser-navigation!)
   (mount-components))
