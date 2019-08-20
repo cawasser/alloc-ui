@@ -60,6 +60,7 @@
   :profiles
   {:uberjar {:omit-source true
              :prep-tasks ["compile" ["cljsbuild" "once" "min"]]
+             :dependencies [[day8.re-frame/tracing-stubs "0.5.1"]]
              :cljsbuild
              {:builds
               {:min
@@ -87,12 +88,14 @@
    :project/dev  {:jvm-opts ["-Dconf=dev-config.edn"]
                   :dependencies [[binaryage/devtools "0.9.10"]
                                  [cider/piggieback "0.4.0"]
+                                 [day8.re-frame/re-frame-10x "0.4.1"]
                                  [doo "0.1.11"]
                                  [expound "0.7.2"]
                                  [figwheel-sidecar "0.5.18"]
                                  [pjstadig/humane-test-output "0.9.0"]
                                  [prone "1.6.1"]
-                                 [re-frisk "0.5.4.1"]
+                                 ;[re-frisk "0.5.4.1"]
+                                 [day8.re-frame/tracing "0.5.1"]
                                  [ring/ring-devel "1.7.1"]
                                  [ring/ring-mock "0.3.2"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
@@ -111,8 +114,9 @@
                       :source-map true
                       :optimizations :none
                       :pretty-print true
-                      :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true}
-                      :preloads [re-frisk.preload]}}}}
+                      :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true
+                                        "day8.re_frame.tracing.trace_enabled_QMARK_"  true}
+                      :preloads [day8.re-frame-10x.preload]}}}}
                   
                   
                   
@@ -132,8 +136,8 @@
                      {:output-to "target/test.js"
                       :main "alloc-ui.doo-runner"
                       :optimizations :whitespace
-                      :pretty-print true}}}}
+                      :pretty-print true}}}}}
                   
-                  }
+
    :profiles/dev {}
    :profiles/test {}})

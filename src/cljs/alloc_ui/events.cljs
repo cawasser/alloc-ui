@@ -2,7 +2,8 @@
   (:require
     [re-frame.core :as rf]
     [ajax.core :as ajax]
-    [alloc-ui.dev-db :as d-d]))
+    [alloc-ui.dev-db :as d-d]
+    [day8.re-frame.tracing :refer-macros [fn-traced]]))
 
 ;;dispatchers
 
@@ -16,7 +17,7 @@
 
 (rf/reg-event-db
   :init-db
-  (fn [db [_]]
+  (fn-traced [db [_]]
     (prn ":init-db")
     (assoc db :data {:current {:grid d-d/current-grid}
                      :local {:grid d-d/potential-grid
@@ -27,25 +28,27 @@
 
 (rf/reg-event-db
   :set-local-grid
-  (fn [db [_ grid]]
+  (fn-traced [db [_ grid]]
       (assoc-in db [:data :local :grid] grid)))
 
 (rf/reg-event-db
   :set-local-requests
-  (fn [db [_ requests]]
+  (fn-traced [db [_ requests]]
       (assoc-in db [:data :local :requests] requests)))
 
 (rf/reg-event-db
   :set-current-grid
-  (fn [db [_ grid]]
+  (fn-traced [db [_ grid]]
+      (prn ":set-current-grid")
       (assoc-in db [:data :current :grid] grid)))
 
 (rf/reg-event-fx
   :fetch-current-grid
-  (fn [_ _]
+  (fn-traced [_ _]
+             (prn ":fetch-current-grid")
       {:http-xhrio {:method          :get
-                    :uri             "/grid"
-                    :response-format (ajax/raw-response-format)
+                    :uri             "/api/grid"
+                    :response-format (ajax/json-response-format)
                     :on-success       [:set-current-grid]}}))
 
 
