@@ -14,28 +14,11 @@
   (:import goog.History))
 
 
-(def current-grid [[#{:a} #{} #{} #{} #{}]
-                   [#{:a} #{} #{} #{} #{}]
-                   [#{} #{:b} #{:b} #{} #{}]
-                   [#{} #{:c} #{:c} #{} #{}]
-                   [#{} #{} #{} #{} #{}]])
-
-(def potential-grid [[#{:a} #{} #{:e} #{:e} #{}]
-                     [#{:a} #{} #{} #{} #{:f}]
-                     [#{} #{:b} #{:b} #{} #{:g}]
-                     [#{} #{:c} #{:c} #{} #{}]
-                     [#{:d} #{:d} #{} #{} #{}]])
-
 (def color-match {:a ["green" "white"] :b ["blue" "white"] :c ["orange" "white"]
                   :d ["grey" "white"] :e ["cornflowerblue" "white"] :f ["darkcyan" "white"]
                   :g ["goldenrod" "black"] :j [] :k [] :l []})
 
-(def requests {:j #{[0 0] [[1 2 3] 1]}
-               :k #{[0 1] [3 0]}
-               :l #{[[2 3] #{0 1 2}]}})
-;:m #{[[2 3] #{0 1 2}]}
-;:n #{[[2 3] #{0 1 2}]}
-;:o #{[[2 3] #{0 1 2}]}})
+
 
 
 (defn nav-link [uri title page]
@@ -125,28 +108,32 @@
 
 
 (defn home-page []
-  [:section.section {:style {:padding "0.5rem 1.5rem"}}
-   [:div.container
-    [:section.hero.is-bold.is-primary
-     [:div.hero-body {:style {:padding "1rem 1.5rem"}}
-      [:h1.title "Black Hammer"]
-      [:p.subtitle.is-size-7 "Copyright 2019, Northrop Grumman"]]]]
-   [:div.content {:style {:padding "1rem 3rem"}}
-    [:p.title.is-4 "Your Requests"]
-    [request-grid requests]
-    [:div.content
-     [:a.button.is-primary {:on-click #()} "Submit"]]]
-   [:div.content {:style {:padding "0.70rem 3rem"}}
-    [:div.tile.is-ancestor
-     [:div.tile.is-4
-      [:div.container
-       [:p.title.is-5.has-text-centered "Current Allocation"]
-       [allocation-grid current-grid color-match]]]
-     [:div.tile.is-3]
-     [:div.tile.is-4
-      [:div.container
-       [:p.title.is-5.has-text-centered "Potential Allocation"]
-       [allocation-grid potential-grid color-match]]]]]])
+  (let [current-grid   (rf/subscribe [:current-grid])
+        potential-grid (rf/subscribe [:local-grid])
+        requests       (rf/subscribe [:local-requests])]
+    (fn []
+      [:section.section {:style {:padding "0.5rem 1.5rem"}}
+       [:div.container
+        [:section.hero.is-bold.is-primary
+         [:div.hero-body {:style {:padding "1rem 1.5rem"}}
+          [:h1.title "Black Hammer"]
+          [:p.subtitle.is-size-7 "Copyright 2019, Northrop Grumman"]]]]
+       [:div.content {:style {:padding "1rem 3rem"}}
+        [:p.title.is-4 "Your Requests"]
+        [request-grid @requests]
+        [:div.content
+         [:a.button.is-primary {:on-click #()} "Submit"]]]
+       [:div.content {:style {:padding "0.70rem 3rem"}}
+        [:div.tile.is-ancestor
+         [:div.tile.is-4
+          [:div.container
+           [:p.title.is-5.has-text-centered "Current Allocation"]
+           [allocation-grid @current-grid color-match]]]
+         [:div.tile.is-3]
+         [:div.tile.is-4
+          [:div.container
+           [:p.title.is-5.has-text-centered "Potential Allocation"]
+           [allocation-grid @potential-grid color-match]]]]]])))
 
 
 
@@ -156,7 +143,6 @@
 
 (defn page []
   [:div
-   ;[navbar]
    [(pages @(rf/subscribe [:page]))]])
 
 
@@ -169,7 +155,9 @@
 
 (defn init! []
   (rf/dispatch-sync [:navigate (reitit/match-by-name start-up/router :home)])
+
   (ajax/load-interceptors!)
-  (rf/dispatch [:fetch-docs])
+  (rf/dispatch-sync [:init-db])
+  ;(rf/dispatch [:fetch-current-grid])
   (start-up/hook-browser-navigation!)
   (mount-components))
