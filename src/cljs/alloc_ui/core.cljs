@@ -14,9 +14,9 @@
   (:import goog.History))
 
 
-(def color-match {:a ["green" "white"] :b ["blue" "white"] :c ["orange" "white"]
-                  :d ["grey" "white"] :e ["cornflowerblue" "white"] :f ["darkcyan" "white"]
-                  :g ["goldenrod" "black"] :j [] :k [] :l []})
+(def color-match {"a" ["green" "white"] "b" ["blue" "white"] "c" ["orange" "white"]
+                  "d" ["grey" "white"] "e" ["cornflowerblue" "white"] "f" ["darkcyan" "white"]
+                  "g" ["goldenrod" "black"] "j" [] "k" [] "l" [] "z" ["red" "white"]})
 
 
 
@@ -58,7 +58,7 @@
   (let [selected (r/atom (zipmap (keys requests) (repeat false)))]
     (fn []
       [:div.container
-       [:p " selected = " @selected]
+       ;[:p "selected = " @selected]
        [:table-container
         [:table
          [:thead
@@ -70,8 +70,8 @@
               [:tr
                [:td {:on-click #(do
                                   (prn "clicked!")
-                                  (swap! selected assoc k (not (k @selected))))}
-                (if (k @selected)
+                                  (swap! selected assoc k (not (get @selected k))))}
+                (if (get @selected k)
                   [:span.icon.has-text-success.is-small [:i.material-icons :done]]
                   [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
                [:td (str k)]
@@ -101,8 +101,8 @@
              (if (nil? t)
                ^{:key (str x "-" 0)} [:td ""]
                ^{:key (str x "-" t)} [:td.has-text-centered
-                                      {:style {:background-color (first (t color-match))
-                                               :color            (second (t color-match))}}
+                                      {:style {:background-color (first (get color-match t))
+                                               :color            (second (get color-match t))}}
                                       (str t)])))])]]))
 
 
@@ -158,6 +158,6 @@
 
   (ajax/load-interceptors!)
   (rf/dispatch-sync [:init-db])
-  ;(rf/dispatch [:fetch-current-grid])
+  (rf/dispatch [:fetch-current-grid])
   (start-up/hook-browser-navigation!)
   (mount-components))

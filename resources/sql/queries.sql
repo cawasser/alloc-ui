@@ -1,21 +1,31 @@
--- :name create-user! :! :n
--- :doc creates a new user record
-INSERT INTO users
-(id, first_name, last_name, email, pass)
-VALUES (:id, :first_name, :last_name, :email, :pass)
+-- :name get-current-grid :? :*
+-- :doc retrieves the current grid
+SELECT * FROM grid;
 
--- :name update-user! :! :n
--- :doc updates an existing user record
-UPDATE users
-SET first_name = :first_name, last_name = :last_name, email = :email
-WHERE id = :id
 
--- :name get-user :? :1
--- :doc retrieves a user record given the id
-SELECT * FROM users
-WHERE id = :id
 
--- :name delete-user! :! :n
--- :doc deletes a user record given the id
-DELETE FROM users
-WHERE id = :id
+-- :name create-cell! :! :n
+-- :doc inserts a cell
+insert into grid
+(channel, timeslot, requestorid)
+VALUES (:channel, :timeslot, :requestorid);
+
+
+
+-- :name update-cell! :! :n
+-- :doc updates, or inserts a cell
+update grid
+SET channel = :channel, timeslot = :timeslot, requestorid = :requestorid
+WHERE channel = :channel, timeslot = :timeslot;
+
+
+
+-- :name delete-cell! :! :n
+-- :doc deletes a cell given the channel and timeslot
+DELETE FROM grid
+WHERE channel = :channel, timeslot = :timeslot;
+
+
+-- :name delete-all-cells! :! :n
+-- :doc deletes all cells
+DELETE FROM grid;
