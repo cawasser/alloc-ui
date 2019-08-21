@@ -1,3 +1,3 @@
-CREATE TABLE grid
-(channel INTEGER, timeslot INTEGER, requestorid text,
-PRIMARY KEY (channel, timeslot));
+create table grid
+(owner text, cells text,
+PRIMARY KEY (owner));

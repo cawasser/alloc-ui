@@ -1,31 +1,37 @@
 -- :name get-current-grid :? :*
 -- :doc retrieves the current grid
-SELECT * FROM grid;
+SELECT * FROM grid
+WHERE owner = "current";
 
 
+-- :name get-grid-by-owner :? :*
+-- :doc retrieves the grid specified by owner
+SELECT * FROM grid
+WHERE owner = :owner;
 
--- :name create-cell! :! :n
--- :doc inserts a cell
+
+-- :name create-grid! :! :n
+-- :doc inserts a grid
 insert into grid
-(channel, timeslot, requestorid)
-VALUES (:channel, :timeslot, :requestorid);
+(owner, cells)
+VALUES (:owner, :cells);
 
 
 
--- :name update-cell! :! :n
--- :doc updates, or inserts a cell
+-- :name update-grid! :! :n
+-- :doc updates a grid
 update grid
-SET channel = :channel, timeslot = :timeslot, requestorid = :requestorid
-WHERE channel = :channel, timeslot = :timeslot;
+SET content = :content
+WHERE owner = :owner
 
 
 
--- :name delete-cell! :! :n
--- :doc deletes a cell given the channel and timeslot
+-- :name delete-grid-by-owner! :! :n
+-- :doc deletes a grid given an owner
 DELETE FROM grid
-WHERE channel = :channel, timeslot = :timeslot;
+WHERE owner = :owner
 
 
--- :name delete-all-cells! :! :n
--- :doc deletes all cells
+-- :name delete-all-grids! :! :n
+-- :doc deletes all grids
 DELETE FROM grid;
