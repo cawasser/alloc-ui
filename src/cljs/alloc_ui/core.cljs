@@ -3,20 +3,30 @@
     [day8.re-frame.http-fx]
     [reagent.core :as r]
     [re-frame.core :as rf]
-    [goog.events :as events]
-    [goog.history.EventType :as HistoryEventType]
     [markdown.core :refer [md->html]]
     [alloc-ui.ajax :as ajax]
     [alloc-ui.events]
     [reitit.core :as reitit]
-    [clojure.string :as string]
     [alloc-ui.start-up :as start-up])
   (:import goog.History))
 
 
-(def color-match {"a" ["green" "white"] "b" ["blue" "white"] "c" ["orange" "white"]
-                  "d" ["grey" "white"] "e" ["cornflowerblue" "white"] "f" ["darkcyan" "white"]
-                  "g" ["goldenrod" "black"] "j" [] "k" [] "l" [] "z" ["red" "white"]})
+(def color-pallet [["green" "white"] ["blue" "white"] ["orange" "black"]
+                   ["grey" "white"] ["cornflowerblue" "white"] ["darkcyan" "white"]
+                   ["goldenrod" "black"] ["khaki" "black"] ["deepskyblue" "black"]
+                   ["navy" "white"] ["red" "white"] ["orangered" "white"]])
+
+
+(defn- grid-keys [grid]
+  (remove nil?
+          (into #{}
+                (for [ch (range (count (first grid)))
+                      ts (range (count grid))]
+                  (first (get-in grid [ts ch]))))))
+
+(defn- color-match [grid requestors]
+  (let [c-reqs (grid-keys grid)]
+    (zipmap (concat c-reqs (keys requestors)) color-pallet)))
 
 
 
@@ -53,12 +63,15 @@
    "Black Hammer. Copyright 2019, Northrop Grumman"])
 
 
+(defn- submit [requests]
+  (rf/dispatch [:allocate (pr-str requests)]))
+
 
 (defn request-grid [requests]
-  (let [selected (r/atom (zipmap (keys requests) (repeat false)))]
+  (let [selected           (r/atom (zipmap (keys requests) (repeat false)))
+        potential-requests (r/atom {})]
     (fn []
       [:div.container
-       ;[:p "selected = " @selected]
        [:table-container
         [:table
          [:thead
@@ -69,14 +82,18 @@
               ^{:key k}
               [:tr
                [:td {:on-click #(do
-                                  (prn "clicked!")
-                                  (swap! selected assoc k (not (get @selected k))))}
+                                  (swap! selected assoc k (not (get @selected k)))
+                                  (if (get @selected k)
+                                    (swap! potential-requests assoc k r)
+                                    (swap! potential-requests dissoc k)))}
                 (if (get @selected k)
                   [:span.icon.has-text-success.is-small [:i.material-icons :done]]
                   [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
                [:td (str k)]
                (let [txt (for [a r] (str a "     "))]
-                 [:td txt])]))]]]])))
+                 [:td txt])]))]]]
+       [:div.content
+        [:a.button.is-primary {:on-click #(submit @potential-requests)} "Submit"]]])))
 
 
 
@@ -112,28 +129,31 @@
         potential-grid (rf/subscribe [:local-grid])
         requests       (rf/subscribe [:local-requests])]
     (fn []
-      [:section.section {:style {:padding "0.5rem 1.5rem"}}
-       [:div.container
-        [:section.hero.is-bold.is-primary
-         [:div.hero-body {:style {:padding "1rem 1.5rem"}}
-          [:h1.title "Black Hammer"]
-          [:p.subtitle.is-size-7 "Copyright 2019, Northrop Grumman"]]]]
-       [:div.content {:style {:padding "1rem 3rem"}}
-        [:p.title.is-4 "Your Requests"]
-        [request-grid @requests]
-        [:div.content
-         [:a.button.is-primary {:on-click #()} "Submit"]]]
-       [:div.content {:style {:padding "0.70rem 3rem"}}
-        [:div.tile.is-ancestor
-         [:div.tile.is-4
-          [:div.container
-           [:p.title.is-5.has-text-centered "Current Allocation"]
-           [allocation-grid @current-grid color-match]]]
-         [:div.tile.is-3]
-         [:div.tile.is-4
-          [:div.container
-           [:p.title.is-5.has-text-centered "Potential Allocation"]
-           [allocation-grid @potential-grid color-match]]]]]])))
+      (let [colors (color-match @current-grid @requests)]
+
+        [:section.section {:style {:padding "0.5rem 1.5rem"}}
+         [:div.container
+          [:section.hero.is-bold.is-primary
+           [:div.hero-body {:style {:padding "1rem 1.5rem"}}
+            [:h1.title "Black Hammer"]
+            [:p.subtitle.is-size-7 "Copyright 2019, Northrop Grumman"]]]]
+         [:div.content {:style {:padding "1rem 3rem"}}
+          ;[:p "grid " (str @current-grid)]
+          ;[:p "reqs " (str @requests)]
+          ;[:p "colors " (str colors)]]])))
+          [:p.title.is-4 "Your Requests"]
+          [request-grid @requests]]
+         [:div.content {:style {:padding "0.70rem 3rem"}}
+          [:div.tile.is-ancestor
+           [:div.tile.is-4
+            [:div.container
+             [:p.title.is-5.has-text-centered "Current Allocation"]
+             [allocation-grid @current-grid colors]]]
+           [:div.tile.is-3]
+           [:div.tile.is-4
+            [:div.container
+             [:p.title.is-5.has-text-centered "Potential Allocation"]
+             [allocation-grid @potential-grid colors]]]]]]))))
 
 
 

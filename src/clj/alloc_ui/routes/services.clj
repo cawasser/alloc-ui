@@ -54,7 +54,21 @@
 
    ["/grid"
     {:get {:summary "get current grid"
-           :responses {200 {:body [[#{string?}]]}}
+           :responses {200 {:body string?}}
            :handler (fn [_]
                       {:status 200
-                       :body (gs/to-grid (db/get-current-grid))})}}]])
+                       :body (pr-str (gs/to-grid (db/get-current-grid)))})}}]
+
+
+   ["/request"
+     {:post {:summary "try to put requests into the current grid"
+             :parameters {:body {:requests string?}}
+             :responses {200 {:body {:result string?}}}
+             :handler (fn [{{{:keys [requests]} :body} :parameters}]
+                        (prn "POST /api/request" requests)
+                        {:status 200
+                         :body {:result
+                                (pr-str
+                                  (gs/apply-requests-to-grid
+                                    (clojure.edn/read-string
+                                      requests)))}})}}]])
