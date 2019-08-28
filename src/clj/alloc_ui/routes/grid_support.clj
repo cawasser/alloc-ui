@@ -1,7 +1,9 @@
 (ns alloc-ui.routes.grid-support
   (:require [alloc-ui.db.core :as db]
             [alloc-ui.grid.request-rules :as r]
-            [alloc-ui.grid.allocation :as a]))
+            [alloc-ui.grid.allocation :as a]
+            [alloc-ui.sparse-grid.sparse-grid :as sparse-a]
+            [alloc-ui.sparse-grid.sparse-request-rules :as sparse-r]))
 
 
 (def current-grid [[#{"a"} #{} #{} #{} #{}]
@@ -10,9 +12,23 @@
                    [#{} #{"c"} #{"c"} #{"z"} #{"z"}]
                    [#{} #{"aa"} #{"aa"} #{} #{"z"}]])
 
+(def sparse-grid {"0-0" {:channel 0 :timeslot 0 :allocated-to #{"a"}}
+                  "0-1" {:channel 0 :timeslot 1 :allocated-to #{"a"}}
+                  "1-2" {:channel 1 :timeslot 2 :allocated-to #{"b"}}
+                  "2-2" {:channel 2 :timeslot 2 :allocated-to #{"b"}}
+                  "1-3" {:channel 1 :timeslot 3 :allocated-to #{"c"}}
+                  "2-3" {:channel 2 :timeslot 3 :allocated-to #{"c"}}
+                  "1-4" {:channel 1 :timeslot 4 :allocated-to #{"aa"}}
+                  "2-4" {:channel 2 :timeslot 4 :allocated-to #{"aa"}}
+                  "3-3" {:channel 3 :timeslot 3 :allocated-to #{"z"}}
+                  "3-4" {:channel 3 :timeslot 4 :allocated-to #{"z"}}
+                  "4-4" {:channel 4 :timeslot 4 :allocated-to #{"z"}}})
+
+
 (def sample-requests {"q" #{[1 0]}})
 
 ; TODO: move to a sparse matrix for the grid, across all parts of the system
+
 (defn- null-tx [grid requests]
   {:before grid
    :after grid
@@ -27,19 +43,23 @@
    structure for use with allocation requests"
 
   (prn "to-grid " (clojure.edn/read-string (:cells (first raw-sql))))
-  (:cells (first raw-sql)))
+  (-> raw-sql
+      first
+      :cells
+      clojure.edn/read-string))
+      ;:cells (first raw-sql)))
 
 
 (def sat-rule #(and (<= (count %) 1)
                     (> (count %) 0)))
 (def rej-rule #(<= (count %) 1))
 
-(defn apply-requests-to-grid
-      ([requests]
-       (apply-requests-to-grid requests (-> (db/get-current-grid)
-                                            first
-                                            :cells
-                                            clojure.edn/read-string)))
+(defn apply-requests-to-grid)
+  ([requests]
+   (apply-requests-to-grid requests (-> (db/get-current-grid)
+                                        first
+                                        :cells
+                                        clojure.edn/read-string))
 
   ([requests grid]
    (let [adjusted-reqs (r/generate-acceptable-requests grid requests)]
