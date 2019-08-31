@@ -68,8 +68,6 @@
 ;
 ; TODO: let's get some spec going, so we can generate some tests
 ;
-; TODO: develop a simple UI to visualize the "demand" modeled by the algorithm
-;
 ; TODO: develop a simple UI to develop "requests"
 ;
 ; TODO: determine what makes sense to LOG (intermediates? params?)
@@ -86,15 +84,14 @@
 ; DATA STRUCTURES
 ;
 ; GRID
-;    vector of vectors (2d rectangular matrix) of sets
+;    "sparse" map of cells that have been allocated
 ;
-;    eg. (5x5)
+;    eg.
 ;
-;      [[#{} #{} #{} #{} #{}]
-;       [#{} #{} #{} #{} #{}]
-;       [#{} #{} #{} #{} #{}]
-;       [#{} #{} #{} #{} #{}]
-;       [#{} #{} #{} #{} #{}]]
+;      {"0-0" {:channel 0 :timeslot 0 :allocated-to #{"a"}}
+;       "1-1" {:channel 1 :timeslot 1 :allocated-to #{"a"}}
+;       "98-1" {:channel 98 :timeslot 1 :allocated-to #{"a"}}
+;       "99-1" {:channel 99 :timeslot 1 :allocated-to #{"a"}}}
 ;
 ; REQUESTS
 ;
@@ -102,8 +99,8 @@
 ;
 ;    eg.
 ;
-;      {:a #{[0 0] [1 1]}
-;       :b #{[0 1] [1 0]}}
+;      {"b" #{[0 0] [1 1]}
+;       "a" #{[0 1] [1 0] [1 1]}}
 ;
 ; GRID-TEST-TX
 ;
@@ -119,26 +116,20 @@
 ;
 ;   eg.
 ;
-;      {:before [[#{} #{} #{} #{} #{}] [#{} #{} #{} #{} #{}] [#{} #{} #{} #{} #{}] [#{} #{} #{} #{} #{}] [#{} #{} #{} #{} #{}]],
-;       :after  [[#{:b} #{} #{} #{} #{}]
-;                [#{:a} #{} #{} #{} #{}]
-;                [#{} #{:a} #{} #{} #{}]
-;                [#{} #{} #{} #{:c} #{}]
-;                [#{} #{} #{} #{:c} #{:c}]],
-;       :sat    {[0 0] #{:b}, [0 1] #{:a},
-;                [1 2] #{:a}, [3 3] #{:c},
-;                [3 4] #{:c}, [4 4] #{:c}},
+;      {:before {}
+;       :after  {"0-0" {:channel 0 :timeslot 0 :allocated-to #{"b"}}
+;                "1-1" {:channel 1 :timeslot 1 :allocated-to #{"b" "a"}}
+;                "0-1" {:channel 0 :timeslot 1 :allocated-to #{"a"}}
+;                "1-0" {:channel 1 :timeslot 0 :allocated-to #{"a"}}},
+;       :sat    {[0 0] #{:b}, [0 1] #{:a}, [0 1] #{:a},
 ;       :rej    {[1 1] #{:b :a}}}
 ;
-;
-; TODO: request-slot (ie. channel and time-slot) may need to be modified to support rules engine
 ;
 ;;;;;;;;;;;;;;;;;;;;
 ;
 ; PUBLIC API
 ;
-; fixed-unit-grid  - returns an empty GRID, a rectangular data structure of empty
-;                      sets to be used as resource 'slots
+; empty-grid  - returns an empty GRID, shortcut to return {}
 ;
 ; test-requests    - given a GRID and a REQUESTS, apply the requests
 ;
@@ -163,79 +154,105 @@
 
 
 
-(defn fixed-unit-grid
-      "builds a rectangular data structure of empty sets to be used as
-      resource 'slots'
+(defn- gen-id
+  "generates a string 'ID' from channel and timeslot data"
 
-      a 5x5 grid looks like:
+  ([ch ts]
+   (str ch "-" ts))
 
-      [[#{} #{} #{} #{} #{}]
-       [#{} #{} #{} #{} #{}]
-       [#{} #{} #{} #{} #{}]
-       [#{} #{} #{} #{} #{}]
-       [#{} #{} #{} #{} #{}]]"
-  [channels time-periods empty-val]
-  (vec (repeat time-periods
-               (vec (repeat channels empty-val)))))
+  ([[ch ts]]
+   (str ch "-" ts)))
 
-; TODO: may need to modify (populate...) to support rules engine
-; TODO: modify (populate) to support [] as grid
+
+(defn- prune-allocations
+  "removes any allocation where the :allocated-to value is nil or empty"
+
+  [grid]
+  (remove (fn [[_ v]] (or (nil? (:allocated-to v))
+                          (empty? (:allocated-to v))))
+          (seq grid)))
+
+
+
+
 (defn- populate
   "Assigns each of the cells specified as [channel time-unit]
   coordinates to the given val
 
       returns - an updated grid"
+
   [grid requestor-id request-cells]
-  (reduce (fn [g [ch t]]
-            (assoc-in g [t ch] (merge (get-in g [t ch]) requestor-id)))
+  (reduce (fn [g [ch ts]]
+            (assoc g (gen-id ch ts)
+                     {:channel      ch
+                      :timeslot     ts
+                      :allocated-to (into #{}
+                                          (concat (get-in g [(gen-id ch ts)
+                                                             :allocated-to])
+                                                  #{requestor-id}))}))
           grid request-cells))
 
-(defn- apply-requests [pop-fn grid requests]
+
+
+(defn- apply-requests
   "apply a map of requests to the grid, updating recursively
-      NOTE: last one wins - i.e., only 1 plan can occupy a slot in
-      the grid
 
       returns - an updated grid"
+
+  [grid requests]
   (if (empty? requests)
     grid
-    (let [[p coordinates] (first requests)]
-      (recur pop-fn (pop-fn grid p coordinates) (rest requests)))))
+    (let [[id allocs] (first requests)]
+      (recur (populate grid id allocs) (rest requests)))))
+
+
 
 (defn- check-satisfied
-  "return a map of {[slot] #{requestor}} that can be applied to the grid without
+  "return a map of that can be applied to the grid without
   violating the (sat-rule) predicate, ie, 'we should keep these'
 
-      returns - {[slot] #{requestors}}"
+      returns - {<id> {:channel <int>,
+                         :timeslot <int>,
+                         :allocated-to #{<id>}}"
+
   [pred-fn grid original-grid]
   (into {}
-        (for [ch (range (count (first grid)))
-              ts (range (count grid))]
-          (let [val (get-in grid [ts ch])]
+        (for [alloc (keys grid)]
+          (let [val (get-in grid [alloc :allocated-to])]
             (if (and (pred-fn val)
-                     (not (= val (get-in original-grid [ts ch]))))
-              {[ch ts] (get-in grid [ts ch])})))))
+                     (not (= val (get-in original-grid
+                                         [alloc :allocated-to]))))
+              {alloc (get grid alloc)})))))
+
+
 
 (defn- check-rejected
-  "return a map of {[slot] #{requestor}} that can be applied to the grid that
+  "return a map of {id #{requestors}} that can be applied to the grid that
   pass the the (rej-rule) predicate, ie, 'we should reject these'
 
-      returns - {[slot] #{requestors}}"
+      returns - {<id> #{<id>}}"
+
   [pred-fn grid]
   (into {}
-        (for [ch (range (count (first grid)))
-              ts (range (count grid))]
-          (if (not (pred-fn (get-in grid [ts ch])))
-            {[ch ts] (get-in grid [ts ch])}))))
+        (for [alloc (keys grid)]
+          (if (not (pred-fn (get-in grid [alloc :allocated-to])))
+            {alloc (get-in grid [alloc :allocated-to])}))))
+
+
 
 (defn- remove-rejects
-  "returns an updated grid that does NOT include and of the allocations provided
+  "returns a grid that does NOT include and of the allocations provided
   in the 'rejects' parameter, ie, the resulting grid is 'clean'
 
       returns - an updated grid"
+
   [original-grid grid rejects]
-  (reduce (fn [g [[ch t] _]]
-            (assoc-in g [t ch] (get-in original-grid [t ch])))
-          grid rejects))
+  (into {}
+        (reduce (fn [g [id _]]
+                  (assoc g id (get original-grid id)))
+                grid rejects)))
+
+
 
 (defn- retract-one-requestor
   "removes the requestor-id from each cell specified by retraction-cells -
@@ -243,14 +260,25 @@
      doesn't have an allocation
 
       returns - an updated grid"
-  [grid requestor-id retraction-cells]
-  (reduce (fn [g [ch t]]
-            (assoc-in g [t ch] (disj (get-in g [t ch]) requestor-id)))
-          grid retraction-cells))
+
+  [grid [requestor-id retraction-cells]]
+  (into {}
+        (prune-allocations
+          (reduce (fn [g id]
+                    (assoc-in g [(gen-id id) :allocated-to]
+                              (disj (get-in g [(gen-id id) :allocated-to])
+                                    requestor-id)))
+                  grid retraction-cells))))
+
 
 
 ;PUBLIC
-(defn test-requests [sat-rule rej-rule initial-grid requests]
+
+(def empty-grid {})
+
+
+
+(defn test-requests
   "given a grid and a set of requests, apply the requests
 
       returns a map of:
@@ -258,25 +286,32 @@
          2) the grid 'after' (:after)
          3) the set of requests that were applied (:satisfied)
          4) the set of requests that were NOT applied (:rejected)"
-  (let [g (apply-requests populate initial-grid requests)]
+
+  [sat-rule rej-rule initial-grid requests]
+  (let [g (into {}
+                (remove (fn [[_ v]] (nil? v))
+                        (seq (apply-requests initial-grid requests))))]
     (let [sat (check-satisfied sat-rule g initial-grid)
           rej (check-rejected rej-rule g)]
       {:before initial-grid
-       :after  (remove-rejects initial-grid g rej)
+       :after  (into {}
+                     (remove (fn [[_ v]] (or (nil? v) (empty? v)))
+                             (seq (remove-rejects initial-grid g rej))))
        :sat    sat
        :rej    rej})))
 
 
-(defn retract-requests [grid requests]
+(defn retract-requests
   "apply a map of retractions to the grid, updating recursively
 
       returns - an updated grid"
-  (if (empty? requests)
+
+  [grid retractions]
+  (if (empty? retractions)
     grid
-    (let [[p coordinates] (first requests)]
-      (recur
-        (retract-one-requestor grid p coordinates)
-        (rest requests)))))
+    (recur
+      (retract-one-requestor grid (first retractions))
+      (rest retractions))))
 
 
 
@@ -286,10 +321,9 @@
   (use 'grid.allocation :reload)
   (in-ns 'grid.allocation)
 
-  (def empty-grid-5-5 (fixed-unit-grid 5 5 #{}))
-  (def overlapping-requests {:b #{[0 0] [1 1]}
-                             :a #{[0 1] [1 1] [1 2]}
-                             :c #{[3 3] [3 4] [4 4]}})
+  (def overlapping-requests {"b" #{[0 0] [1 1]}
+                             "a" #{[0 1] [1 1] [1 2]}
+                             "c" #{[3 3] [3 4] [4 4]}})
 
   (def sat-rule #(and (<= (count %) 1)
                       (> (count %) 0)))
@@ -299,20 +333,6 @@
   ; a very simple case
   ;
   (test-requests sat-rule rej-rule empty-grid-5-5 overlapping-requests)
-     ; => {:before [[#{} #{} #{} #{} #{}]
-     ;              [#{} #{} #{} #{} #{}]
-     ;              [#{} #{} #{} #{} #{}]
-     ;              [#{} #{} #{} #{} #{}]
-     ;              [#{} #{} #{} #{} #{}]],
-     ;     :after  [[#{:b} #{} #{} #{} #{}]
-     ;              [#{:a} #{} #{} #{} #{}]
-     ;              [#{} #{:a} #{} #{} #{}]
-     ;              [#{} #{} #{} #{:c} #{}]
-     ;              [#{} #{} #{} #{:c} #{:c}]],
-     ;     :sat    {[0 0] #{:b}, [0 1] #{:a},
-     ;              [1 2] #{:a}, [3 3] #{:c},
-     ;              [3 4] #{:c}, [4 4] #{:c}},
-     ;      :rej   {[1 1] #{:b :a}}}
 
 
   ; now try chaining a few requests together. do we lose any pre-existing
@@ -321,7 +341,7 @@
   (def requests {:d #{[0 0] [1 1]}
                  :e #{[2 2] [2 3] [2 4]}
                  :f #{[1 3] [1 4]}})
-  (def current-grid (atom empty-grid-5-5))
+  (def current-grid (atom empty-grid))
 
 
   (reset! current-grid
@@ -329,11 +349,7 @@
                                  rej-rule
                                  @current-grid
                                  overlapping-requests)))
-      ; => [[#{:b} #{} #{} #{} #{}]
-      ;     [#{:a} #{} #{} #{} #{}]
-      ;     [#{} #{:a} #{} #{} #{}]
-      ;     [#{} #{} #{} #{:c} #{}]
-      ;     [#{} #{} #{} #{:c} #{:c}]]
+
   @current-grid
 
   (reset! current-grid
@@ -341,11 +357,6 @@
                                  rej-rule
                                  @current-grid
                                  requests)))
-      ; => [[#{:b} #{} #{} #{} #{}]
-      ;     [#{:a} #{:d} #{} #{} #{}]
-      ;     [#{} #{:a} #{:e} #{} #{}]
-      ;     [#{} #{:f} #{:e} #{:c} #{}]
-      ;     [#{} #{:f} #{:e} #{:c} #{:c}]]
 
   (def fill-in {:g #{[0 1] [0 2] [0 3] [0 4]}
                 :h #{[1 0] [2 0] [3 0] [4 0]}})
@@ -354,83 +365,35 @@
                                  rej-rule
                                  @current-grid
                                  fill-in)))
-      ; => [[#{:b} #{:h} #{:h} #{:h} #{:h}]
-      ;     [#{:a} #{:d} #{} #{} #{}]
-      ;     [#{:g} #{:a} #{:e} #{} #{}]
-      ;     [#{:g} #{:f} #{:e} #{:c} #{}]
-      ;     [#{:g} #{:f} #{:e} #{:c} #{:c}]]
 
   ; some retractions
   ;
   (def retractions {:g #{[0 2]}})
   (def retractions-2 {:g #{[0 3] [0 4]}})
   (def retract-3 {:a #{[0 1]} :c #{[4 4]}})
+  (def retract-4 {"a" #{[70 70]}})
 
-  (retract-requests @current-grid retractions)
-      ; => [[#{:b} #{:h} #{:h} #{:h} #{:h}]
-      ;     [#{:a} #{:d} #{} #{} #{}]
-      ;     [#{} #{:a} #{:e} #{} #{}]
-      ;     [#{:g} #{:f} #{:e} #{:c} #{}]
-      ;     [#{:g} #{:f} #{:e} #{:c} #{:c}]]
+  (defn- diff [g1 g2]
+    (clojure.set/difference (set (keys g1)) (set (keys g2))))
 
-  (retract-requests @current-grid retractions-2)
-      ; => [[#{:b} #{:h} #{:h} #{:h} #{:h}]
-      ;     [#{:a} #{:d} #{} #{} #{}]
-      ;     [#{:g} #{:a} #{:e} #{} #{}]
-      ;     [#{} #{:f} #{:e} #{:c} #{}]
-      ;     [#{} #{:f} #{:e} #{:c} #{:c}]]
+  (diff @current-grid
+        (retract-requests @current-grid {}))
 
-  (retract-requests @current-grid retract-3)
-      ; => [[#{:b} #{:h} #{:h} #{:h} #{:h}]
-      ;     [#{} #{:d} #{} #{} #{}]
-      ;     [#{:g} #{:a} #{:e} #{} #{}]
-      ;     [#{:g} #{:f} #{:e} #{:c} #{}]
-      ;     [#{:g} #{:f} #{:e} #{:c} #{}]]
+  (diff @current-grid
+        (retract-requests @current-grid retractions))
 
+  (diff @current-grid
+        (retract-requests empty-grid retractions))
+
+  (diff @current-grid
+        (retract-requests @current-grid retractions-2))
+
+  (diff @current-grid
+        (retract-requests @current-grid retract-3))
+
+  (diff @current-grid
+        (retract-requests @current-grid retract-4))
 
 
   ())
 
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;
-;
-; need to make GRID be "sparse"
-;
-; example: 128 channels for 1 month (hourly)
-;
-; grid -> 128 x (24*30) -> 128 x 720 -> 92,160 cells!
-;
-; many might be empty
-;
-; we may need a more compressed format
-;            (see https://en.wikipedia.org/wiki/Run-length_encoding)
-;
-;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;
-
-
-(comment
-  (defn fixed-unit-grid-2
-        [channels time-periods empty-val]
-    (into (sorted-map)
-          (apply merge-with conj
-                 (for [x (range channels)
-                       y (range time-periods)]
-                   {[x y] empty-val}))))
-
-  (fixed-unit-grid-2 2 2 #{})
-  (fixed-unit-grid-2 5 5 #{})
-
-
-  (test-requests sat-rule
-                   rej-rule
-                   []
-                   overlapping-requests)
-  ())

@@ -20,9 +20,9 @@
 (defn- grid-keys [grid]
   (remove nil?
           (into #{}
-                (for [ch (range (count (first grid)))
-                      ts (range (count grid))]
-                  (first (get-in grid [ts ch]))))))
+                (map (fn [[_ res]]
+                       (first (:allocated-to res)))
+                     grid))))
 
 (defn- color-match [grid requestors]
   (let [c-reqs (grid-keys grid)]
@@ -100,11 +100,17 @@
 #_[:input {:type "text"} txt]
 
 
+(defn gen-id
+  ([ch ts]
+   (str ch "-" ts))
+  ([[ch ts]]
+   (str ch "-" ts)))
 
 
+; TODO figure out how to draw the table from the sparse grid
 (defn allocation-grid [grid color-match]
-  (let [w (count (first grid))
-        h (count grid)]
+  (let [w 5
+        h 5]
     [:table.is-hoverable
      [:thead
       [:tr [:th ""]
@@ -114,7 +120,7 @@
         ^{:key y}
         [:tr [:th (str y)]
          (for [x (range w)]
-           (let [t (first (get-in grid [y x]))]
+           (let [t (first (get-in grid [(gen-id x y) :allocated-to]))]
              (if (nil? t)
                ^{:key (str x "-" 0)} [:td ""]
                ^{:key (str x "-" t)} [:td.has-text-centered
@@ -141,7 +147,7 @@
           ;[:p "grid " (str @current-grid)]
           ;[:p "reqs " (str @requests)]
           ;[:p "colors " (str colors)]]])))
-          [:p.title.is-4 "Your Requests"]
+          [:p.title.is-4 "Your Requests (sparse)"]
           [request-grid @requests]]
          [:div.content {:style {:padding "0.70rem 3rem"}}
           [:div.tile.is-ancestor

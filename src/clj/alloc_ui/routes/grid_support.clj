@@ -54,20 +54,20 @@
                     (> (count %) 0)))
 (def rej-rule #(<= (count %) 1))
 
-(defn apply-requests-to-grid)
+(defn apply-requests-to-grid
   ([requests]
    (apply-requests-to-grid requests (-> (db/get-current-grid)
                                         first
                                         :cells
-                                        clojure.edn/read-string))
+                                        clojure.edn/read-string)))
 
   ([requests grid]
-   (let [adjusted-reqs (r/generate-acceptable-requests grid requests)]
+   (let [adjusted-reqs (sparse-r/generate-acceptable-requests grid requests)]
 
      {:adjusted-requests adjusted-reqs
       :tx                (if (empty? adjusted-reqs)
                            (null-tx grid requests)
-                           (a/test-requests
+                           (sparse-a/test-requests
                              sat-rule
                              rej-rule
                              grid
@@ -87,7 +87,7 @@
   (db/delete-all-grids!)
 
   ; load some default data into the grid table
-  (db/create-grid! {:owner "current" :cells (pr-str current-grid)})
+  (db/create-grid! {:owner "current" :cells (pr-str sparse-grid)})
 
   ; test fetching and processing the SQL data for return back to clients
   (to-grid (db/get-current-grid))

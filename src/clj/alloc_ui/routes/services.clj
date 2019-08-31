@@ -54,10 +54,10 @@
 
    ["/grid"
     {:get {:summary "get current grid"
-           :responses {200 {:body string?}}
+           :responses {200 {:body {:result string?}}}
            :handler (fn [_]
                       {:status 200
-                       :body (pr-str (gs/to-grid (db/get-current-grid)))})}}]
+                       :body {:result (pr-str (gs/to-grid (db/get-current-grid)))}})}}]
 
 
    ["/request"

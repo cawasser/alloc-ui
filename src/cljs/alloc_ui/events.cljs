@@ -40,7 +40,8 @@
   :set-current-grid
   (fn-traced [db [_ grid]]
              (prn ":set-current-grid" grid)
-             (assoc-in db [:data :current :grid] (cljs.reader/read-string grid))))
+             (prn ":set-current-grid un" (cljs.reader/read-string (:result grid)))
+             (assoc-in db [:data :current :grid] (cljs.reader/read-string (:result grid)))))
 
 (rf/reg-event-fx
   :fetch-current-grid
@@ -48,7 +49,7 @@
              (prn ":fetch-current-grid")
              {:http-xhrio {:method          :get
                            :uri             "/api/grid"
-                           :response-format (ajax/json-response-format)
+                           :response-format (ajax/json-response-format {:keywords? true})
                            :on-success      [:set-current-grid]}}))
 
 (rf/reg-event-db
