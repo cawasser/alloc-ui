@@ -5,6 +5,15 @@
     [alloc-ui.dev-db :as d-d]
     [day8.re-frame.tracing :refer-macros [fn-traced]]))
 
+
+
+(defn- set-version [db message]
+  (prn "set-version" message)
+  (assoc-in db [:data :last-service-version]
+            (get message :service-version)))
+
+
+
 ;;dispatchers
 
 (rf/reg-event-db
@@ -19,7 +28,8 @@
   :init-db
   (fn-traced [db [_]]
              (prn ":init-db")
-             (assoc db :data {:current {:grid d-d/current-grid}
+             (assoc db :data {:last-service-version d-d/default-last-service-version
+                              :current {:grid d-d/current-grid}
                               :local   {:grid     d-d/potential-grid
                                         :requests d-d/requests}})))
 
@@ -40,8 +50,12 @@
   :set-current-grid
   (fn-traced [db [_ grid]]
              (prn ":set-current-grid" grid)
+             (prn (get grid :service-version))
              (prn ":set-current-grid un" (cljs.reader/read-string (:result grid)))
-             (assoc-in db [:data :current :grid] (cljs.reader/read-string (:result grid)))))
+             (-> db
+                 (set-version grid)
+                 (assoc-in [:data :current :grid] (cljs.reader/read-string
+                                                    (:result grid))))))
 
 (rf/reg-event-fx
   :fetch-current-grid
@@ -58,9 +72,11 @@
              (prn ":set-potential-grid-from-requests" results)
              (let [res (cljs.reader/read-string (:result results))]
                (prn ":set-potential..." res)
-               (assoc-in db [:data :local :grid] (-> res
-                                                     :tx
-                                                     :after)))))
+               (-> db
+                   (set-version results)
+                   (assoc-in [:data :local :grid] (-> res
+                                                      :tx
+                                                      :after))))))
 
 
 (rf/reg-event-fx
@@ -127,3 +143,9 @@
   :common/error
   (fn [db _]
     (:common/error db)))
+
+
+(rf/reg-sub
+  :last-service-version
+  (fn [db _]
+    (-> db :data :last-service-version)))

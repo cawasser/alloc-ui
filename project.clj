@@ -1,4 +1,4 @@
-(defproject alloc-ui "0.2.0-SNAPSHOT"
+(defproject alloc-ui "0.3.0-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -36,10 +36,11 @@
                  [ring/ring-core "1.7.1"]
                  [ring/ring-defaults "0.3.2"]
                  [selmer "1.12.12"]
-                 [loco "0.3.1"]]
+                 [loco "0.3.1"]
+                 [trptcolin/versioneer "0.2.0"]]
 
   :min-lein-version "2.0.0"
-  
+
   :source-paths ["src/clj" "src/cljs" "src/cljc"]
   :test-paths ["test/clj"]
   :resource-paths ["resources" "target/cljsbuild"]
@@ -48,6 +49,7 @@
 
   :plugins [[lein-cljsbuild "1.1.7"]
             [lein-immutant "2.1.0"]]
+            ;[lein-sha-version "0.1.1"]]
   :clean-targets ^{:protect false}
   [:target-path [:cljsbuild :builds :app :compiler :output-dir] [:cljsbuild :builds :app :compiler :output-to]]
   :figwheel
@@ -56,7 +58,7 @@
    :nrepl-port 7002
    :css-dirs ["resources/public/css"]
    :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
-  
+
 
   :profiles
   {:uberjar {:omit-source true
@@ -76,8 +78,8 @@
                  :closure-warnings
                  {:externs-validation :off :non-standard-jsdoc :off}
                  :externs ["react/externs/react.js"]}}}}
-             
-             
+
+
              :aot :all
              :uberjar-name "alloc-ui.jar"
              :source-paths ["env/prod/clj"]
@@ -118,9 +120,9 @@
                       :closure-defines {"re_frame.trace.trace_enabled_QMARK_" true
                                         "day8.re_frame.tracing.trace_enabled_QMARK_"  true}
                       :preloads [day8.re-frame-10x.preload]}}}}
-                  
-                  
-                  
+
+
+
                   :doo {:build "test"}
                   :source-paths ["env/dev/clj"]
                   :resource-paths ["env/dev/resources"]
@@ -138,7 +140,7 @@
                       :main "alloc-ui.doo-runner"
                       :optimizations :whitespace
                       :pretty-print true}}}}}
-                  
+
 
    :profiles/dev {}
    :profiles/test {}})

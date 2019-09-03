@@ -133,7 +133,8 @@
 (defn home-page []
   (let [current-grid   (rf/subscribe [:current-grid])
         potential-grid (rf/subscribe [:local-grid])
-        requests       (rf/subscribe [:local-requests])]
+        requests       (rf/subscribe [:local-requests])
+        version        (rf/subscribe [:last-service-version])]
     (fn []
       (let [colors (color-match @current-grid @requests)]
 
@@ -142,7 +143,7 @@
           [:section.hero.is-bold.is-primary
            [:div.hero-body {:style {:padding "1rem 1.5rem"}}
             [:h1.title "Black Hammer"]
-            [:p.subtitle.is-size-7 "Copyright 2019, Northrop Grumman"]]]]
+            [:p.subtitle.is-size-7 "Copyright 2019, Northrop Grumman. (version " @version ")"]]]]
          [:div.content {:style {:padding "1rem 3rem"}}
           ;[:p "grid " (str @current-grid)]
           ;[:p "reqs " (str @requests)]

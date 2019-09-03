@@ -12,7 +12,8 @@
     [ring.util.http-response :refer :all]
     ;[clojure.java.io :as io]
     [alloc-ui.db.core :as db]
-    [alloc-ui.routes.grid-support :as gs]))
+    [alloc-ui.routes.grid-support :as gs]
+    [trptcolin.versioneer.core :as version]))
 
 (def grid-spec [[#{keyword?}]])
 
@@ -32,7 +33,7 @@
                  exception/exception-middleware
                  ;; decoding request body
                  muuntaja/format-request-middleware
-                 ;; coercing response bodys
+                 ;; coercing response bodies
                  coercion/coerce-response-middleware
                  ;; coercing request parameters
                  coercion/coerce-request-middleware
@@ -54,21 +55,35 @@
 
    ["/grid"
     {:get {:summary "get current grid"
-           :responses {200 {:body {:result string?}}}
+           :responses {200 {:body {:service-version string?
+                                   :result string?}}}
            :handler (fn [_]
+                      (prn "GET /grid")
+                      (prn "server version: " (version/get-version "alloc-ui" "alloc-ui" "Not Found"))
                       {:status 200
-                       :body {:result (pr-str (gs/to-grid (db/get-current-grid)))}})}}]
+                       :body {:service-version (version/get-version "alloc-ui" "alloc-ui" "Not Found")
+                              :result (pr-str (gs/to-grid (db/get-current-grid)))}})}}]
 
 
    ["/request"
      {:post {:summary "try to put requests into the current grid"
              :parameters {:body {:requests string?}}
-             :responses {200 {:body {:result string?}}}
+             :responses {200 {:body {:service-version string?
+                                     :result string?}}}
              :handler (fn [{{{:keys [requests]} :body} :parameters}]
                         (prn "POST /api/request" requests)
                         {:status 200
-                         :body {:result
+                         :body {:service-version (version/get-version "alloc-ui" "alloc-ui" "Not Found")
+                                :result
                                 (pr-str
                                   (gs/apply-requests-to-grid
                                     (clojure.edn/read-string
                                       requests)))}})}}]])
+
+
+
+(comment
+  (System/setProperty "bar.version" "1.2.3-SNAPSHOT")
+  (version/get-version "alloc-ui" "alloc-ui")
+  (version/get-revision "alloc-ui" "alloc-ui")
+  (System/getProperty "alloc-ui.version"))
