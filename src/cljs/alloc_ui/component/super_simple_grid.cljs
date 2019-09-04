@@ -1,6 +1,4 @@
-(ns alloc-ui.component.super-simple-grid
-  (:require
-    [alloc-ui.events]))
+(ns alloc-ui.component.super-simple-grid)
 
 
 (defn gen-id

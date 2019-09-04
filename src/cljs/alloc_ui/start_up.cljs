@@ -4,7 +4,7 @@
     [re-frame.core :as rf]
     [goog.events :as events]
     [goog.history.EventType :as HistoryEventType]
-    [alloc-ui.events]
+    [alloc-ui.util.events]
     [reitit.core :as reitit]
     [clojure.string :as string])
   (:import goog.History))

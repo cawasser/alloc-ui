@@ -1,4 +1,4 @@
-(ns alloc-ui.events
+(ns alloc-ui.util.events
   (:require
     [re-frame.core :as rf]
     [ajax.core :as ajax]
@@ -29,9 +29,10 @@
   (fn-traced [db [_]]
              (prn ":init-db")
              (assoc db :data {:last-service-version d-d/default-last-service-version
-                              :current {:grid d-d/current-grid}
-                              :local   {:grid     d-d/potential-grid
-                                        :requests d-d/requests}})))
+                              :current              {:grid d-d/current-grid}
+                              :local                {:grid               d-d/potential-grid
+                                                     :requests           d-d/requests
+                                                     :potential-requests {}}})))
 
 
 
@@ -45,6 +46,22 @@
   :set-local-requests
   (fn-traced [db [_ requests]]
              (assoc-in db [:data :local :requests] requests)))
+
+(rf/reg-event-db
+  :add-to-local-potential-requests
+  (fn-traced [db [_ k request]]
+             (assoc-in db [:data :local :potential-requests]
+                       (conj (-> db :data :local :potential-requests)
+                             {k request}))))
+
+(rf/reg-event-db
+  :remove-from-local-potential-requests
+  (fn-traced [db [_ k]]
+             (assoc-in db [:data :local :potential-requests]
+                       (dissoc (-> db :data :local :potential-requests)
+                               k))))
+
+
 
 (rf/reg-event-db
   :set-current-grid
@@ -99,53 +116,3 @@
   :common/set-error
   (fn [db [_ error]]
     (assoc db :common/error error)))
-
-
-
-
-;;subscriptions
-
-(rf/reg-sub
-  :current-grid
-  (fn [db _]
-    (-> db :data :current :grid)))
-
-(rf/reg-sub
-  :local-grid
-  (fn [db _]
-    (-> db :data :local :grid)))
-
-(rf/reg-sub
-  :local-requests
-  (fn [db _]
-    (-> db :data :local :requests)))
-
-
-
-
-(rf/reg-sub
-  :route
-  (fn [db _]
-    (-> db :route)))
-
-(rf/reg-sub
-  :page
-  :<- [:route]
-  (fn [route _]
-    (-> route :data :name)))
-
-(rf/reg-sub
-  :docs
-  (fn [db _]
-    (:docs db)))
-
-(rf/reg-sub
-  :common/error
-  (fn [db _]
-    (:common/error db)))
-
-
-(rf/reg-sub
-  :last-service-version
-  (fn [db _]
-    (-> db :data :last-service-version)))

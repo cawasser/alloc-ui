@@ -1,4 +1,4 @@
-(defproject alloc-ui "0.4.0-SNAPSHOT"
+(defproject alloc-ui "0.4.1-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"

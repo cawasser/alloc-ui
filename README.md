@@ -79,7 +79,14 @@ Then, build the Docker image. run (the dot _is_ important):
 
 Then, run the image in Dock. run:
 
-    docker run -p 3500:3000 alloc-ui 
+    docker run -d -p 3500:3000 alloc-ui 
+
+The `-d` flag tells docker to disconnect form the running 
+process, so you will be sent back to the command prompt and
+the `-p` flag sets up a port mapping from 3000 inside the 
+container (where we designed our app to listen) and 3500 on 
+your local machine, so you can connect to the app in the 
+container
 
 Check to see that it is running. run:
 
@@ -91,6 +98,9 @@ Finally, connect to the running image, but point the browser at:
 
     localhost:3500 
     
+Notice that we use port 3500 to connect to the containerized app, 
+and not 3000 like when we are developing on our local machine
+
 Even the Swagger UI page is available at:
 
     localhost:3500/swagger-ui

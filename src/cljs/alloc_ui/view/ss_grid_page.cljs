@@ -9,11 +9,12 @@
 
 
 (defn ssg-page
-      ""
+  ""
   []
-  (let [current-grid   (rf/subscribe [:current-grid])
-        potential-grid (rf/subscribe [:local-grid])
-        requests       (rf/subscribe [:local-requests])]
+  (let [current-grid       (rf/subscribe [:current-grid])
+        potential-grid     (rf/subscribe [:local-grid])
+        requests           (rf/subscribe [:local-requests])
+        potential-requests (rf/subscribe [:local-potential-requests])]
     (fn []
       (let [colors (cp/color-match @current-grid @requests)]
         [:section.section {:style {:padding "0.5rem 1.5rem"}}
@@ -22,7 +23,10 @@
           ;[:p "reqs " (str @requests)]
           ;[:p "colors " (str colors)]]])))
           [:p.title.is-5 {:style {:padding "0.5rem 4rem"}} "Request Candidates"]
-          [rl/request-grid @requests (rs/make-combos @requests @current-grid) colors]]
+          [rl/request-grid @requests
+           potential-requests
+           (rs/make-combos @requests @current-grid)
+           colors]]
          [:div.content {:style {:padding "0.70rem 3rem"}}
           [:div.tile.is-ancestor
            [:div.tile.is-4
