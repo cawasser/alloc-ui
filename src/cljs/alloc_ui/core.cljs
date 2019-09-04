@@ -7,27 +7,11 @@
     [alloc-ui.ajax :as ajax]
     [alloc-ui.events]
     [reitit.core :as reitit]
-    [alloc-ui.start-up :as start-up])
+    [alloc-ui.start-up :as start-up]
+    [alloc-ui.view.ss-grid-page :as ssg]
+    [alloc-ui.view.about-page :as about]
+    [alloc-ui.view.heatmap-page :as heatmap])
   (:import goog.History))
-
-
-(def color-pallet [["green" "white"] ["blue" "white"] ["orange" "black"]
-                   ["grey" "white"] ["cornflowerblue" "white"] ["darkcyan" "white"]
-                   ["goldenrod" "black"] ["khaki" "black"] ["deepskyblue" "black"]
-                   ["navy" "white"] ["red" "white"] ["orangered" "white"]])
-
-
-(defn- grid-keys [grid]
-  (remove nil?
-          (into #{}
-                (map (fn [[_ res]]
-                       (first (:allocated-to res)))
-                     grid))))
-
-(defn- color-match [grid requestors]
-  (let [c-reqs (grid-keys grid)]
-    (zipmap (concat c-reqs (keys requestors)) color-pallet)))
-
 
 
 
@@ -41,7 +25,7 @@
   (r/with-let [expanded? (r/atom false)]
               [:nav.navbar.is-info>div.container
                [:div.navbar-brand
-                [:a.navbar-item {:href "/" :style {:font-weight :bold}} "BLACK HAMMER - alloc-ui"]
+                [:a.navbar-item.is-size-3 {:href "/" :style {:font-weight :bold}} "Black Hammer "]
                 [:span.navbar-burger.burger
                  {:data-target :nav-menu
                   :on-click    #(swap! expanded? not)
@@ -50,127 +34,26 @@
                [:div#nav-menu.navbar-menu
                 {:class (when @expanded? :is-active)}
                 [:div.navbar-end
-                 [nav-link "#/" "Home" :home]
+                 [nav-link "#/" "SS Grid" :home]
+                 [nav-link "#/heatmap" "Heatmap" :heatmap]
                  [nav-link "#/about" "About" :about]]]]))
 
-(defn about-page []
-  [:section.section>div.container>div.content
-   [:img {:src "/img/warning_clojure.png"}]])
 
 (defn footer []
   [:footer.is-size-7.has-text-right.has-text-grey-light
    {:style {:padding "0rem 3rem"}}
-   "Black Hammer. Copyright 2019, Northrop Grumman"])
-
-
-(defn- submit [requests]
-  (rf/dispatch [:allocate (pr-str requests)]))
-
-
-(defn request-grid [requests]
-  (let [selected           (r/atom (zipmap (keys requests) (repeat false)))
-        potential-requests (r/atom {})]
-    (fn []
-      [:div.container
-       [:table-container
-        [:table
-         [:thead
-          [:tr [:th "Include?"] [:th "Requestor"] [:th "Requests"]]]
-         [:tbody
-          (doall
-            (for [[k r] (seq requests)]
-              ^{:key k}
-              [:tr
-               [:td {:on-click #(do
-                                  (swap! selected assoc k (not (get @selected k)))
-                                  (if (get @selected k)
-                                    (swap! potential-requests assoc k r)
-                                    (swap! potential-requests dissoc k)))}
-                (if (get @selected k)
-                  [:span.icon.has-text-success.is-small [:i.material-icons :done]]
-                  [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
-               [:td (str k)]
-               (let [txt (for [a r] (str a "     "))]
-                 [:td txt])]))]]]
-       [:div.content
-        [:a.button.is-primary {:on-click #(submit @potential-requests)} "Submit"]]])))
-
-
-
-#_[:input {:type "text"} txt]
-
-
-(defn gen-id
-  ([ch ts]
-   (str ch "-" ts))
-  ([[ch ts]]
-   (str ch "-" ts)))
-
-
-; TODO figure out how to draw the table from the sparse grid
-(defn allocation-grid [grid color-match]
-  (let [w 5
-        h 5]
-    [:table.is-hoverable
-     [:thead
-      [:tr [:th ""]
-       (for [x (range w)] ^{:key x} [:th.has-text-centered x])]]
-     [:tbody
-      (for [y (range h)]
-        ^{:key y}
-        [:tr [:th (str y)]
-         (for [x (range w)]
-           (let [t (first (get-in grid [(gen-id x y) :allocated-to]))]
-             (if (nil? t)
-               ^{:key (str x "-" 0)} [:td ""]
-               ^{:key (str x "-" t)} [:td.has-text-centered
-                                      {:style {:background-color (first (get color-match t))
-                                               :color            (second (get color-match t))}}
-                                      (str t)])))])]]))
-
-
-
-(defn home-page []
-  (let [current-grid   (rf/subscribe [:current-grid])
-        potential-grid (rf/subscribe [:local-grid])
-        requests       (rf/subscribe [:local-requests])
-        version        (rf/subscribe [:last-service-version])]
-    (fn []
-      (let [colors (color-match @current-grid @requests)]
-
-        [:section.section {:style {:padding "0.5rem 1.5rem"}}
-         [:div.container
-          [:section.hero.is-bold.is-primary
-           [:div.hero-body {:style {:padding "1rem 1.5rem"}}
-            [:h1.title "Black Hammer"]
-            [:p.subtitle.is-size-7 "Copyright 2019, Northrop Grumman. (version " @version ")"]]]]
-         [:div.content {:style {:padding "1rem 3rem"}}
-          ;[:p "grid " (str @current-grid)]
-          ;[:p "reqs " (str @requests)]
-          ;[:p "colors " (str colors)]]])))
-          [:p.title.is-4 "Your Requests (sparse)"]
-          [request-grid @requests]]
-         [:div.content {:style {:padding "0.70rem 3rem"}}
-          [:div.tile.is-ancestor
-           [:div.tile.is-4
-            [:div.container
-             [:p.title.is-5.has-text-centered "Current Allocation"]
-             [allocation-grid @current-grid colors]]]
-           [:div.tile.is-3]
-           [:div.tile.is-4
-            [:div.container
-             [:p.title.is-5.has-text-centered "Potential Allocation"]
-             [allocation-grid @potential-grid colors]]]]]]))))
-
-
+   "Copyright 2019, Northrop Grumman (v." @(rf/subscribe [:last-service-version]) ")"])
 
 (def pages
-  {:home  #'home-page
-   :about #'about-page})
+  {:home  #'ssg/ssg-page
+   :heatmap #'heatmap/heatmap-page
+   :about #'about/about-page})
 
 (defn page []
   [:div
-   [(pages @(rf/subscribe [:page]))]])
+   [navbar]
+   [(pages @(rf/subscribe [:page]))]
+   [footer]])
 
 
 ;; -------------------------

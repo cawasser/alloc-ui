@@ -1,4 +1,4 @@
-(defproject alloc-ui "0.3.0-SNAPSHOT"
+(defproject alloc-ui "0.4.0-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -37,7 +37,13 @@
                  [ring/ring-defaults "0.3.2"]
                  [selmer "1.12.12"]
                  [loco "0.3.1"]
-                 [trptcolin/versioneer "0.2.0"]]
+                 [trptcolin/versioneer "0.2.0"]
+
+                 ;thi.ng
+                 [thi.ng/geom "1.0.0-RC3"]
+                 [thi.ng/dstruct "0.2.1"]
+                 [thi.ng/math "0.2.2"]]
+
 
   :min-lein-version "2.0.0"
 

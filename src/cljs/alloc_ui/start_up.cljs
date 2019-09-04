@@ -16,6 +16,7 @@
 (def router
   (reitit/router
     [["/" :home]
+     ["/heatmap" :heatmap]
      ["/about" :about]]))
 
 
