@@ -1,12 +1,13 @@
-(ns alloc-ui.view.heatmap-page
+(ns alloc-ui.view.point-grid-page
   (:require
     [re-frame.core :as rf]
-    [alloc-ui.component.heatmap :as hm]
+    [alloc-ui.component.point-grid :as pg]
     [alloc-ui.component.request-list :as rl]))
 
 
-
-(defn heatmap-page []
+(defn point-grid-page
+  ""
+  []
   (let [current-grid       (rf/subscribe [:current-grid])
         potential-grid     (rf/subscribe [:local-grid])
         requests           (rf/subscribe [:local-requests])
@@ -20,7 +21,7 @@
         ;[:p "reqs " (str @requests)]
         ;[:p "colors " (str colors)]]])))
         [:p.title.is-5 {:style {:padding "0.5rem 4rem"}} "Request Candidates"]
-        [rl/dyn-request-grid
+        [rl/request-grid
          @requests
          potential-requests
          combos
@@ -30,12 +31,9 @@
          [:div.tile.is-5
           [:div.container
            [:p.title.is-5.has-text-centered "Current Allocation"]
-           [hm/heatmap '() 500 275 :rainbow2]]]
+           [pg/point-grid @current-grid 500 275 colors]]]
          [:div.tile.is-2]
          [:div.tile.is-5
           [:div.container
            [:p.title.is-5.has-text-centered "Potential Allocation"]
-           [hm/heatmap '() 500 275 :rainbow2]]]]]])))
-
-
-
+           [pg/point-grid @potential-grid 500 275 colors]]]]]])))

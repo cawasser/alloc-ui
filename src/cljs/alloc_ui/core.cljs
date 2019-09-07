@@ -11,7 +11,10 @@
     [alloc-ui.start-up :as start-up]
     [alloc-ui.view.ss-grid-page :as ssg]
     [alloc-ui.view.about-page :as about]
-    [alloc-ui.view.heatmap-page :as heatmap])
+    [alloc-ui.view.heatmap-page :as heatmap]
+    [alloc-ui.view.point-grid-page :as point-grid]
+
+    [alloc-ui.util.request-support :as rs])
   (:import goog.History))
 
 
@@ -37,6 +40,7 @@
                 [:div.navbar-end
                  [nav-link "#/" "SS Grid" :home]
                  [nav-link "#/heatmap" "Heatmap" :heatmap]
+                 [nav-link "#/point-grid" "Point Grid" :point-grid]
                  [nav-link "#/about" "About" :about]]]]))
 
 
@@ -48,6 +52,7 @@
 (def pages
   {:home  #'ssg/ssg-page
    :heatmap #'heatmap/heatmap-page
+   :point-grid #'point-grid/point-grid-page
    :about #'about/about-page})
 
 (defn page []
@@ -69,6 +74,9 @@
 
   (ajax/load-interceptors!)
   (rf/dispatch-sync [:init-db])
-  (rf/dispatch [:fetch-current-grid])
+  (rf/dispatch-sync [:fetch-current-grid])
+  (rs/make-combos @(rf/subscribe [:local-requests])
+                  @(rf/subscribe [:current-grid])) ; TODO - change to a dispatch
+
   (start-up/hook-browser-navigation!)
   (mount-components))

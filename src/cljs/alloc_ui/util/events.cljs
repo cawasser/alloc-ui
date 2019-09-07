@@ -18,9 +18,9 @@
 
 (rf/reg-event-db
   :navigate
-  (fn [db [_ route]]
-    (prn ":navigate")
-    (assoc db :route route)))
+  (fn-traced [db [_ route]]
+             (prn ":navigate")
+             (assoc db :route route)))
 
 
 
@@ -32,7 +32,8 @@
                               :current              {:grid d-d/current-grid}
                               :local                {:grid               d-d/potential-grid
                                                      :requests           d-d/requests
-                                                     :potential-requests {}}})))
+                                                     :potential-requests {}
+                                                     :combos []}})))
 
 
 
@@ -60,8 +61,6 @@
              (assoc-in db [:data :local :potential-requests]
                        (dissoc (-> db :data :local :potential-requests)
                                k))))
-
-
 
 (rf/reg-event-db
   :set-current-grid
@@ -110,9 +109,16 @@
 
 
 
+(rf/reg-event-db
+  :new-combo
+  (fn-traced
+    [db [_ entry]]
+    (assoc-in db [:data :local :combos]
+              (cons entry (-> db :data :local :combos)))))
+
 
 
 (rf/reg-event-db
   :common/set-error
-  (fn [db [_ error]]
-    (assoc db :common/error error)))
+  (fn-traced [db [_ error]]
+             (assoc db :common/error error)))

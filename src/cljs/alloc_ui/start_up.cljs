@@ -17,6 +17,7 @@
   (reitit/router
     [["/" :home]
      ["/heatmap" :heatmap]
+     ["/point-grid" :point-grid]
      ["/about" :about]]))
 
 

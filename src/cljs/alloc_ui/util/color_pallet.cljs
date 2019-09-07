@@ -7,14 +7,19 @@
 
 
 (defn- grid-keys [grid]
-       (remove nil?
-               (into #{}
-                     (map (fn [[_ res]]
-                                   (first (:allocated-to res)))
-                          grid))))
+  (if (not (empty? grid))
+    (remove nil?
+            (into #{}
+                  (map (fn [[_ res]]
+                         (first (:allocated-to res)))
+                       grid)))))
 
 
 (defn color-match [grid requestors]
+  (do
+    (prn "color-match (1)" grid (grid-keys grid) requestors)
+
+    (if (not (empty? (grid-keys grid)))
       (let [c-reqs (grid-keys grid)]
-               (zipmap (concat c-reqs (keys requestors)) color-pallet)))
+        (zipmap (concat c-reqs (keys requestors)) color-pallet)))))
 

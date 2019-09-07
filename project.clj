@@ -42,7 +42,15 @@
                  ;thi.ng
                  [thi.ng/geom "1.0.0-RC3"]
                  [thi.ng/dstruct "0.2.1"]
-                 [thi.ng/math "0.2.2"]]
+                 [thi.ng/math "0.2.2"]
+
+                 ;fixed data table
+                 ;[cljsjs/fixed-data-table "0.6.3-1"]
+                 [cljsjs/fixed-data-table-2 "0.8.23-0"]
+
+                 ; specter
+                 [com.rpl/specter "1.1.2"]]
+                 
 
 
   :min-lein-version "2.0.0"

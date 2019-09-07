@@ -1,7 +1,9 @@
 (ns alloc-ui.util.subs
   (:require
     [re-frame.core :as rf]
-    [day8.re-frame.tracing :refer-macros [fn-traced]]))
+    [day8.re-frame.tracing :refer-macros [fn-traced]]
+
+    [alloc-ui.util.color-pallet :as cp]))
 
 
 
@@ -26,6 +28,22 @@
   :local-potential-requests
   (fn [db _]
     (-> db :data :local :potential-requests)))
+
+(rf/reg-sub
+  :local-combos
+  (fn [db _]
+    (-> db :data :local :combos)))
+
+(rf/reg-sub
+  :color-matching
+
+  :<- [:current-grid]
+  :<- [:local-requests]
+
+  (fn [[grid requests] _]
+    (cp/color-match grid requests)))
+
+
 
 
 (rf/reg-sub
