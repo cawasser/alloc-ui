@@ -18,7 +18,7 @@
         colors             (rf/subscribe [:color-matching])
         combos             (rf/subscribe [:local-combos])]
     (fn []
-      ;(prn "ssg-page" @colors)
+     ; (prn "ssg-page" @combos @selected-requests)
       [:section.section {:style {:padding "0.5rem 1.5rem"}}
        [:div.content {:style {:padding "0rem 1rem"}}
         ;[:p "grid " (str @current-grid)]

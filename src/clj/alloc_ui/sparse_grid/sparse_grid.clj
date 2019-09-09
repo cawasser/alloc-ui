@@ -24,8 +24,8 @@
 (def empty-grid {})
 
 (defn gen-id
-  ([ch ts]
-   (str ch "-" ts))
+      ([ch ts]
+       (str ch "-" ts))
   ([[ch ts]]
    (str ch "-" ts)))
 
@@ -115,7 +115,8 @@
                      (remove (fn [[_ v]] (or (nil? v) (empty? v)))
                              (seq (remove-rejects initial-grid g rej))))
        :sat    sat
-       :rej    rej})))
+       :rej    rej
+       :reqs   requests})))
 
 
 

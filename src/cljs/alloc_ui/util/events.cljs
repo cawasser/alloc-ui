@@ -3,6 +3,7 @@
     [re-frame.core :as rf]
     [ajax.core :as ajax]
     [alloc-ui.dev-db :as d-d]
+    [alloc-ui.util.request-support :as rs]
     [day8.re-frame.tracing :refer-macros [fn-traced]]))
 
 
@@ -32,12 +33,12 @@
                               :current              {:grid d-d/current-grid}
                               :local                {:grid               d-d/potential-grid
                                                      :requests           d-d/requests
-                                                     :potential-requests {}
-                                                     :combos []}})))
+                                                     :potential-requests #{}
+                                                     :combos             []}})))
 
 
 
-
+; TODO - add key so we track which requests match which grid
 (rf/reg-event-db
   :set-local-grid
   (fn-traced [db [_ grid]]
@@ -50,17 +51,18 @@
 
 (rf/reg-event-db
   :add-to-local-potential-requests
-  (fn-traced [db [_ k request]]
+  (fn-traced [db [_ k]]
              (assoc-in db [:data :local :potential-requests]
                        (conj (-> db :data :local :potential-requests)
-                             {k request}))))
+                             k))))
+
 
 (rf/reg-event-db
   :remove-from-local-potential-requests
   (fn-traced [db [_ k]]
              (assoc-in db [:data :local :potential-requests]
-                       (dissoc (-> db :data :local :potential-requests)
-                               k))))
+                       (disj (-> db :data :local :potential-requests)
+                             k))))
 
 (rf/reg-event-db
   :set-current-grid
@@ -90,9 +92,13 @@
                (prn ":set-potential..." res)
                (-> db
                    (set-version results)
-                   (assoc-in [:data :local :grid] (-> res
-                                                      :tx
-                                                      :after))))))
+                   (assoc-in [:data
+                              :local
+                              :grid
+                              (into #{} (keys (-> res :tx :reqs)))]
+                             (-> res
+                                 :tx
+                                 :after))))))
 
 
 (rf/reg-event-fx

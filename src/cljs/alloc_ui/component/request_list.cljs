@@ -5,40 +5,11 @@
     [alloc-ui.component.dynamic-grid :as grid]))
 
 
-(defn- submit [requests]
-  (rf/dispatch [:allocate (pr-str requests)]))
-
-
 (defn- any-combo
   ""
   [combos k]
   (for [c combos]
     (contains? c k)))
-
-
-(def columns
-  [{:header "Included?" :columnKey :included :width 100 :fixed true :rendered :check-rendered}
-   {:header "a" :columnKey "a" :width 30 :fixed true :rendered :valid-rendered}
-   {:header "b" :columnKey "b" :width 30 :fixed true :rendered :valid-rendered}
-   {:header "c" :columnKey "c" :width 30 :fixed true :rendered :valid-rendered}
-   {:header "Requestor" :columnKey "allocated-to" :width 100}
-   {:header "Requests" :columnKey "requests" :width 350}])
-
-
-(defn- process-requests
-  ""
-  [requests combos color-match]
-  (for [r requests]
-    (let [[a rs] r]
-      {"included"     :false
-       "a"            (any-combo combos a)
-       "b"            (any-combo combos a)
-       "c"            (any-combo combos a)
-       "allocated-to" a
-       "requests"     rs
-       "bg-color" (first (get color-match a))
-       "txt-color" (second (get @color-match a))})))
-
 
 
 
@@ -47,10 +18,8 @@
   [requests potential-requests combos color-match]
 
   (fn []
-    ;(prn "request-grid" @color-match combos)
-    ;[:p "request-grid" potential-requests color-match]
     [:div.container
-     ;[:p "selected" @selected]
+     ;[:p "selected" @potential-requests @combos]
      [:table-container
       [:table
        [:thead
@@ -69,21 +38,23 @@
                  ^{:key (str "inc-" k)}
                  [:td.is-narrow
                   {:on-click #(do
-                                (if (get @potential-requests k)
+                                (if (contains? @potential-requests k)
                                   (rf/dispatch-sync [:remove-from-local-potential-requests k])
-                                  (rf/dispatch-sync [:add-to-local-potential-requests k r])))}
-                  (if (get @potential-requests k)
-                    [:span.icon.has-text-success.is-small [:i.material-icons :done]]
-                    [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
+                                  (rf/dispatch-sync [:add-to-local-potential-requests k])))}
+
+                  (if (contains? @potential-requests k)
+                   [:span.icon.has-text-success.is-small [:i.material-icons :done]]
+                   [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
 
                  ^{:key (str "inc-" k)}
-                 [:td.is-narrow [:span.icon.has-text-danger.is-small [:i.material-icons :highlight_off]]])
+                 [:td.is-narrow [:span.icon.has-text-danger.is-small
+                                 [:i.material-icons :highlight_off]]])
 
                (doall
                  (for [[idx c] (map-indexed vector (any-combo @combos k))]
                    (if c
                      ^{:key (str idx "-" k)}
-                     [:td.is-narrow (if (get @potential-requests k)
+                     [:td.is-narrow (if (contains? @potential-requests k)
                                       [:i.material-icons.has-text-success :check_circle]
                                       [:i.material-icons.has-text-grey-lighter :done])]
                      ^{:key (str idx "-" k)}
@@ -95,9 +66,22 @@
                 (str k)]
 
                (let [txt (for [a r] (str a "     "))]
-                 ^{:key (str "req-" txt)} [:td txt])])))]]
-      [:div.content
-       [:a.button.is-primary {:on-click #(submit @potential-requests)} "Submit"]]]]))
+                 ^{:key (str "req-" txt)} [:td txt])])))]]]]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ;(def satellites {"1111" {:iron        "1111" :name "sat-1111"
@@ -126,6 +110,31 @@
 ;           "store"  (rand-nth ["Here" "There" "Nowhere" "Somewhere"])})
 ;        (range 1 (inc size))))
 ;
+
+
+(def columns
+  [{:header "Included?" :columnKey :included :width 100 :fixed true :rendered :check-rendered}
+   {:header "a" :columnKey "a" :width 30 :fixed true :rendered :valid-rendered}
+   {:header "b" :columnKey "b" :width 30 :fixed true :rendered :valid-rendered}
+   {:header "c" :columnKey "c" :width 30 :fixed true :rendered :valid-rendered}
+   {:header "Requestor" :columnKey "allocated-to" :width 100}
+   {:header "Requests" :columnKey "requests" :width 350}])
+
+
+(defn- process-requests
+  ""
+  [requests combos color-match]
+  (for [r requests]
+    (let [[a rs] r]
+      {"included"     :false
+       "a"            (any-combo combos a)
+       "b"            (any-combo combos a)
+       "c"            (any-combo combos a)
+       "allocated-to" a
+       "requests"     rs
+       "bg-color"     (first (get color-match a))
+       "txt-color"    (second (get @color-match a))})))
+
 
 (defn dyn-request-grid
   ""

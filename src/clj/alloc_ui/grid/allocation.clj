@@ -285,7 +285,8 @@
          1) the grid 'before' (:before)
          2) the grid 'after' (:after)
          3) the set of requests that were applied (:satisfied)
-         4) the set of requests that were NOT applied (:rejected)"
+         4) the set of requests that were NOT applied (:rejected)
+         5) the set of request originally submitted"
 
   [sat-rule rej-rule initial-grid requests]
   (let [g (into {}
@@ -298,7 +299,8 @@
                      (remove (fn [[_ v]] (or (nil? v) (empty? v)))
                              (seq (remove-rejects initial-grid g rej))))
        :sat    sat
-       :rej    rej})))
+       :rej    rej
+       :reqs   requests})))
 
 
 (defn retract-requests

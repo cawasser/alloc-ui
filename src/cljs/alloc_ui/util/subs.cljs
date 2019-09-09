@@ -14,10 +14,22 @@
   (fn [db _]
     (-> db :data :current :grid)))
 
+
 (rf/reg-sub
-  :local-grid
+  :all-local-grid
   (fn [db _]
     (-> db :data :local :grid)))
+
+(rf/reg-sub
+  :local-grid
+
+  :<- [:local-potential-requests]
+  :<- [:all-local-grid]
+
+  (fn [[local-requests all-local-grid] _]
+    (get all-local-grid local-requests)))
+
+
 
 (rf/reg-sub
   :local-requests
