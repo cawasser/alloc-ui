@@ -28,9 +28,9 @@
         ;(prn "ssg-page (2)" colors)
         [rl/request-grid
          @requests
-         potential-requests
-         combos
-         colors]]
+         @potential-requests
+         @combos
+         @colors]]
        [:div.content {:style {:padding "0.70rem 3rem"}}
         [:div.tile.is-ancestor
          [:div.tile.is-4

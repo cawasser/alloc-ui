@@ -17,56 +17,55 @@
   ""
   [requests potential-requests combos color-match]
 
-  (fn []
-    [:div.container
-     ;[:p "selected" @potential-requests @combos]
-     [:table-container
-      [:table
-       [:thead
-        ; TODO figure out how to do a spanning header across the check marks
-        [:tr [:th "Include?"] [:th.is-narrow "Work"] [:th.is-narrow "ing C"] [:th.is-narrow "ombo"] [:th "Requestor"] [:th "Requests"]]]
-       [:tbody
-        (doall
-          (for [[k r] (seq requests)]
-            (do
-              ;[:p (str {:key k
-              ;          :background-color (first (get color-match k))
-              ;          :color            (second (get color-match k))})
-              ^{:key k}
-              [:tr
-               (if (some true? (any-combo @combos k))
-                 ^{:key (str "inc-" k)}
-                 [:td.is-narrow
-                  {:on-click #(do
-                                (if (contains? @potential-requests k)
-                                  (rf/dispatch-sync [:remove-from-local-potential-requests k])
-                                  (rf/dispatch-sync [:add-to-local-potential-requests k])))}
+  [:div.container
+   (prn "request-grid" requests potential-requests combos color-match)
+   [:table-container
+    [:table
+     [:thead
+      ; TODO figure out how to do a spanning header across the check marks
+      [:tr [:th "Include?"] [:th.is-narrow "Work"] [:th.is-narrow "ing C"] [:th.is-narrow "ombo"] [:th "Requestor"] [:th "Requests"]]]
+     [:tbody
+      (doall
+        (for [[k r] (seq requests)]
+          (do
+            ;[:p (str {:key k
+            ;          :background-color (first (get color-match k))
+            ;          :color            (second (get color-match k))})
+            ^{:key k}
+            [:tr
+             (if (some true? (any-combo combos k))
+               ^{:key (str "inc-" k)}
+               [:td.is-narrow
+                {:on-click #(do
+                              (if (contains? potential-requests k)
+                                (rf/dispatch-sync [:remove-from-local-potential-requests k])
+                                (rf/dispatch-sync [:add-to-local-potential-requests k])))}
 
-                  (if (contains? @potential-requests k)
-                   [:span.icon.has-text-success.is-small [:i.material-icons :done]]
-                   [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
+                (if (contains? potential-requests k)
+                  [:span.icon.has-text-success.is-small [:i.material-icons :done]]
+                  [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
 
-                 ^{:key (str "inc-" k)}
-                 [:td.is-narrow [:span.icon.has-text-danger.is-small
-                                 [:i.material-icons :highlight_off]]])
+               ^{:key (str "inc-" k)}
+               [:td.is-narrow [:span.icon.has-text-danger.is-small
+                               [:i.material-icons :highlight_off]]])
 
-               (doall
-                 (for [[idx c] (map-indexed vector (any-combo @combos k))]
-                   (if c
-                     ^{:key (str idx "-" k)}
-                     [:td.is-narrow (if (contains? @potential-requests k)
-                                      [:i.material-icons.has-text-success :check_circle]
-                                      [:i.material-icons.has-text-grey-lighter :done])]
-                     ^{:key (str idx "-" k)}
-                     [:td.is_narrow ""])))
+             (doall
+               (for [[idx c] (map-indexed vector (any-combo combos k))]
+                 (if c
+                   ^{:key (str idx "-" k)}
+                   [:td.is-narrow (if (contains? potential-requests k)
+                                    [:i.material-icons.has-text-success :check_circle]
+                                    [:i.material-icons.has-text-grey-lighter :done])]
+                   ^{:key (str idx "-" k)}
+                   [:td.is_narrow ""])))
 
-               ^{:key (str "all-" k)}
-               [:td {:style {:background-color (first (get @color-match k))
-                             :color            (second (get @color-match k))}}
-                (str k)]
+             ^{:key (str "all-" k)}
+             [:td {:style {:background-color (first (get color-match k))
+                           :color            (second (get color-match k))}}
+              (str k)]
 
-               (let [txt (for [a r] (str a "     "))]
-                 ^{:key (str "req-" txt)} [:td txt])])))]]]]))
+             (let [txt (for [a r] (str a "     "))]
+               ^{:key (str "req-" txt)} [:td txt])])))]]]])
 
 
 

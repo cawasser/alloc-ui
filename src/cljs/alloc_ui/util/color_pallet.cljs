@@ -16,9 +16,5 @@
 
 
 (defn color-match [grid requestors]
-  (do
-    ;(prn "color-match (1)" grid (grid-keys grid) requestors)
-    (if (not (empty? (grid-keys grid)))
-      (let [c-reqs (grid-keys grid)]
-        (zipmap (concat c-reqs (keys requestors)) color-pallet)))))
+  (zipmap (concat (grid-keys grid) (keys requestors)) color-pallet))
 
