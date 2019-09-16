@@ -1,4 +1,4 @@
-(defproject alloc-ui "0.4.2-SNAPSHOT"
+(defproject alloc-ui "0.4.3-SNAPSHOT"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -6,6 +6,7 @@
   :dependencies [[cheshire "5.8.1"]
                  [cljs-ajax "0.8.0"]
                  [clojure.java-time "0.3.2"]
+                 [org.clojure/math.combinatorics "0.1.6"]
                  [com.cognitect/transit-clj "0.8.313"]
                  [conman "0.8.3"]
                  [cprop "0.1.13"]

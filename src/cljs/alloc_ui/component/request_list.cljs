@@ -20,10 +20,13 @@
   [:div.container
    (prn "request-grid" requests potential-requests combos color-match)
    [:table-container
-    [:table
+    [:table.is-hoverable
      [:thead
       ; TODO figure out how to do a spanning header across the check marks
-      [:tr [:th "Include?"] [:th.is-narrow "Work"] [:th.is-narrow "ing C"] [:th.is-narrow "ombo"] [:th "Requestor"] [:th "Requests"]]]
+      [:tr [:th "Include?"]
+       (for [c combos]
+         ^{:key c} [:th.is-narrow "_"])
+       [:th "Requestor"] [:th "Requests"]]]
      [:tbody
       (doall
         (for [[k r] (seq requests)]
@@ -54,7 +57,9 @@
                  (if c
                    ^{:key (str idx "-" k)}
                    [:td.is-narrow (if (contains? potential-requests k)
-                                    [:i.material-icons.has-text-success :check_circle]
+                                    (if (contains? (into #{} combos) potential-requests)
+                                      [:i.material-icons.has-text-success :check_circle]
+                                      [:i.material-icons.has-text-danger :check_circle])
                                     [:i.material-icons.has-text-grey-lighter :done])]
                    ^{:key (str idx "-" k)}
                    [:td.is_narrow ""])))

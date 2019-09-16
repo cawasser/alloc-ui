@@ -2,7 +2,6 @@
   (:require
     [re-frame.core :as rf]
     [day8.re-frame.tracing :refer-macros [fn-traced]]
-
     [alloc-ui.util.color-pallet :as cp]))
 
 
@@ -25,9 +24,13 @@
 
   :<- [:local-potential-requests]
   :<- [:all-local-grid]
+  :<- [:local-combos]
 
-  (fn [[local-requests all-local-grid] _]
-    (get all-local-grid local-requests)))
+  (fn [[local-requests all-local-grid local-combos] _]
+    (prn ":local-grid" local-requests ", " local-combos)
+    (if (contains? (into #{} local-combos) local-requests)
+      (get all-local-grid local-requests)
+      (get all-local-grid #{}))))
 
 
 
@@ -41,10 +44,16 @@
   (fn [db _]
     (-> db :data :local :potential-requests)))
 
+
 (rf/reg-sub
   :local-combos
-  (fn [db _]
-    (-> db :data :local :combos)))
+
+  :<- [:all-local-grid]
+
+  (fn [all-local-grid _]
+    (prn "subscribe :local-combos " all-local-grid)
+    (filter #(not (empty? %)) (keys all-local-grid))))
+
 
 (rf/reg-sub
   :color-matching

@@ -3,7 +3,8 @@
             [alloc-ui.grid.request-rules :as r]
             [alloc-ui.grid.allocation :as a]
             [alloc-ui.sparse-grid.sparse-grid :as sparse-a]
-            [alloc-ui.sparse-grid.sparse-request-rules :as sparse-r]))
+            [alloc-ui.sparse-grid.sparse-request-rules :as sparse-r]
+            [clojure.math.combinatorics :as combo]))
 
 
 (def current-grid [[#{"a"} #{} #{} #{} #{}]
@@ -73,6 +74,44 @@
                              grid
                              adjusted-reqs))})))
 
+
+
+(defn analyze-combinations
+      "analyses all possible combinations of the individual requests
+      and results into a format for the client to use"
+
+  ([requests]
+   (analyze-combinations requests (-> (db/get-current-grid)
+                                      first
+                                      :cells
+                                      clojure.edn/read-string)))
+
+  ([requests grid]
+
+   (->> requests
+
+        ; convert the request map to a collection of vectors so we
+        ; can use a request as a single datum (rather than a k-v)
+        seq
+
+        ;  gets all the possible combinations of requests
+        combo/subsets
+
+        ; turn the results back into a map for further processing
+        (map (fn [x] (flatten x)))
+        (map (fn [x] (apply hash-map x)))
+
+        ; run each through the solver
+        (map (fn [x] (apply-requests-to-grid x grid)))
+
+        ; pick out the results
+        (map (fn [x]
+               {(into #{} (keys (:adjusted-requests x)))
+                (-> x :tx :after)}))
+
+        ; and put everything into a single map (this serves to compress
+        ; out the multiple copies of the #{} key...)
+        (into {}))))
 
 
 
