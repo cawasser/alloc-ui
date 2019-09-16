@@ -47,7 +47,11 @@
 (defn footer []
   [:footer.is-size-7.has-text-right.has-text-grey-light
    {:style {:padding "0rem 3rem"}}
-   "Copyright 2019, Northrop Grumman (v." @(rf/subscribe [:last-service-version]) ")"])
+   "Copyright 2019, Northrop Grumman (v."
+   @(rf/subscribe [:last-service-version])
+   "."
+   @(rf/subscribe [:last-service-sha])
+   ")"])
 
 (def pages
   {:home  #'ssg/ssg-page

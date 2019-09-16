@@ -84,3 +84,8 @@
   :last-service-version
   (fn [db _]
     (-> db :data :last-service-version)))
+
+(rf/reg-sub
+  :last-service-sha
+  (fn [db _]
+    (-> db :data :last-service-sha)))

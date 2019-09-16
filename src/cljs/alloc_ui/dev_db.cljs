@@ -66,6 +66,8 @@
 
 (def default-last-service-version "unknown service")
 
+(def default-last-service-sha "00000")
+
 ;"m" #{[[2 3] #{0 1 2}]}
 ;"n" #{[[2 3] #{0 1 2}]}
 ;"o" #{[[2 3] #{0 1 2}]}})

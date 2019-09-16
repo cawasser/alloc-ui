@@ -13,6 +13,10 @@
   (assoc-in db [:data :last-service-version]
             (get message :service-version)))
 
+(defn- set-sha [db message]
+  (prn "set-version" message)
+  (assoc-in db [:data :last-service-sha]
+            (get message :service-sha)))
 
 
 ;;dispatchers
@@ -30,6 +34,7 @@
   (fn-traced [db [_]]
              (prn ":init-db")
              (assoc db :data {:last-service-version d-d/default-last-service-version
+                              :last-service-sha d-d/default-last-service-sha
                               :current              {:grid d-d/current-grid}
                               :local                {:grid               d-d/potential-grid
                                                      :requests           d-d/requests
@@ -72,6 +77,7 @@
              (prn ":set-current-grid un" (cljs.reader/read-string (:result grid)))
              (-> db
                  (set-version grid)
+                 (set-sha grid)
                  (assoc-in [:data :current :grid] (cljs.reader/read-string
                                                     (:result grid))))))
 
@@ -92,6 +98,7 @@
                (prn ":set-potential..." res)
                (-> db
                    (set-version results)
+                   (set-sha results)
                    (assoc-in [:data
                               :local
                               :grid

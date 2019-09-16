@@ -17,6 +17,13 @@
 
 (def grid-spec [[#{keyword?}]])
 
+(defn get-version []
+  (version/get-version "alloc-ui" "alloc-ui" "Not Found"))
+
+
+(defn get-sha []
+    (subs (version/get-revision "alloc-ui" "alloc-ui" "Not Found") 0 5))
+
 
 (defn service-routes []
   ["/api"
@@ -59,9 +66,10 @@
                                    :result string?}}}
            :handler (fn [_]
                       (prn "GET /grid")
-                      (prn "server version: " (version/get-version "alloc-ui" "alloc-ui" "Not Found"))
+                      (prn "server version: " (get-version) ":" (get-sha))
                       {:status 200
-                       :body {:service-version (version/get-version "alloc-ui" "alloc-ui" "Not Found")
+                       :body {:service-version (get-version)
+                              :service-sha (get-sha)
                               :result (pr-str (gs/to-grid (db/get-current-grid)))}})}}]
 
 
@@ -73,7 +81,8 @@
              :handler (fn [{{{:keys [requests]} :body} :parameters}]
                         (prn "POST /api/request" requests)
                         {:status 200
-                         :body {:service-version (version/get-version "alloc-ui" "alloc-ui" "Not Found")
+                         :body {:service-version (get-version)
+                                :service-sha (get-sha)
                                 :result
                                 (pr-str
                                   (gs/apply-requests-to-grid
@@ -85,5 +94,5 @@
 (comment
   (System/setProperty "bar.version" "1.2.3-SNAPSHOT")
   (version/get-version "alloc-ui" "alloc-ui")
-  (version/get-revision "alloc-ui" "alloc-ui")
+  (subs (version/get-revision "alloc-ui" "alloc-ui") 0 5)
   (System/getProperty "alloc-ui.version"))
