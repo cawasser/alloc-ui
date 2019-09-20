@@ -75,13 +75,11 @@
 
 (defn init! []
   (rf/dispatch-sync [:navigate (reitit/match-by-name start-up/router :home)])
-
   (ajax/load-interceptors!)
+
   (rf/dispatch-sync [:init-db])
   (rf/dispatch-sync [:fetch-current-grid])
   (rf/dispatch [:allocate (pr-str @(rf/subscribe [:local-requests]))])
-  ;(rs/make-combos @(rf/subscribe [:local-requests])
-  ;                @(rf/subscribe [:current-grid])) ; TODO - change to a dispatch
 
   (start-up/hook-browser-navigation!)
   (mount-components))

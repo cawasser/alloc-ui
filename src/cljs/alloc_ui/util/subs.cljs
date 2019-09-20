@@ -51,7 +51,7 @@
   :<- [:all-local-grid]
 
   (fn [all-local-grid _]
-    (prn "subscribe :local-combos " all-local-grid)
+    ;(prn "subscribe :local-combos " all-local-grid)
     (filter #(not (empty? %)) (keys all-local-grid))))
 
 
