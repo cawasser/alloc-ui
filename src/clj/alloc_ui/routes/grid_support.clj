@@ -32,10 +32,10 @@
 
 (defn- null-tx [grid requests]
   {:before grid
-   :after grid
-   :sat {}
-   :rej requests
-   :error "Engine rejects the requests"})
+   :after  grid
+   :sat    {}
+   :rej    requests
+   :error  "Engine rejects the requests"})
 
 
 
@@ -45,22 +45,22 @@
 
   (prn "to-grid " (clojure.edn/read-string (:cells (first raw-sql))))
   (-> raw-sql
-      first
-      :cells
-      clojure.edn/read-string))
-      ;:cells (first raw-sql)))
+    first
+    :cells
+    clojure.edn/read-string))
+;:cells (first raw-sql)))
 
 
 (def sat-rule #(and (<= (count %) 1)
-                    (> (count %) 0)))
+                 (> (count %) 0)))
 (def rej-rule #(<= (count %) 1))
 
 (defn apply-requests-to-grid
   ([requests]
    (apply-requests-to-grid requests (-> (db/get-current-grid)
-                                        first
-                                        :cells
-                                        clojure.edn/read-string)))
+                                      first
+                                      :cells
+                                      clojure.edn/read-string)))
 
   ([requests grid]
    (let [adjusted-reqs (sparse-r/generate-acceptable-requests grid requests)]
@@ -77,41 +77,41 @@
 
 
 (defn analyze-combinations
-      "analyses all possible combinations of the individual requests
-      and results into a format for the client to use"
+  "analyses all possible combinations of the individual requests
+  and results into a format for the client to use"
 
   ([requests]
    (analyze-combinations requests (-> (db/get-current-grid)
-                                      first
-                                      :cells
-                                      clojure.edn/read-string)))
+                                    first
+                                    :cells
+                                    clojure.edn/read-string)))
 
   ([requests grid]
-
+   (prn (str "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" requests "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"))
    (->> requests
 
-        ; convert the request map to a collection of vectors so we
-        ; can use a request as a single datum (rather than a k-v)
-        seq
+     ; convert the request map to a collection of vectors so we
+     ; can use a request as a single datum (rather than a k-v)
+     seq
 
-        ;  gets all the possible combinations of requests
-        combo/subsets
+     ;  gets all the possible combinations of requests
+     combo/subsets
 
-        ; turn the results back into a map for further processing
-        (map (fn [x] (flatten x)))
-        (map (fn [x] (apply hash-map x)))
+     ; turn the results back into a map for further processing
+     (map (fn [x] (flatten x)))
+     (map (fn [x] (apply hash-map x)))
 
-        ; run each through the solver
-        (map (fn [x] (apply-requests-to-grid x grid)))
+     ; run each through the solver
+     (map (fn [x] (apply-requests-to-grid x grid)))
 
-        ; pick out the results
-        (map (fn [x]
-               {(into #{} (keys (:adjusted-requests x)))
-                (-> x :tx :after)}))
+     ; pick out the results
+     (map (fn [x]
+            {(into #{} (keys (:adjusted-requests x)))
+             (-> x :tx :after)}))
 
-        ; and put everything into a single map (this serves to compress
-        ; out the multiple copies of the #{} key...)
-        (into {}))))
+     ; and put everything into a single map (this serves to compress
+     ; out the multiple copies of the #{} key...)
+     (into {}))))
 
 
 
@@ -143,9 +143,9 @@
 
 
   (-> (db/get-current-grid)
-      first
-      :cells
-      clojure.edn/read-string)
+    first
+    :cells
+    clojure.edn/read-string)
 
 
   (def j-req (pr-str {"j" #{[[1 2 3] 1]}}))
@@ -164,18 +164,21 @@
     (clojure.edn/read-string k-req))
 
 
-  (def color-pallet   [["green" "white"] ["blue" "white"] ["orange" "black"]
-                       ["grey" "white"] ["cornflowerblue" "white"] ["darkcyan" "white"]
-                       ["goldenrod" "black"] ["khaki" "black"] ["deepskyblue" "black"]
-                       ["navy" "white"] ["red" "white"] ["orangered" "white"]])
+  (def color-pallet [["green" "white"] ["blue" "white"] ["orange" "black"]
+                     ["grey" "white"] ["cornflowerblue" "white"] ["darkcyan" "white"]
+                     ["goldenrod" "black"] ["khaki" "black"] ["deepskyblue" "black"]
+                     ["navy" "white"] ["red" "white"] ["orangered" "white"]])
 
+  (def color-pallet {:a ["green" "white"]
+                     :b ["blue" "white"]
+                     :c ["orange" "black"]})
 
   (defn- grid-keys [grid]
     (remove nil?
       (into #{}
-            (for [ch (range (count (first grid)))
-                  ts (range (count grid))]
-              (first (get-in grid [ts ch]))))))
+        (for [ch (range (count (first grid)))
+              ts (range (count grid))]
+          (first (get-in grid [ts ch]))))))
 
   (defn- color-match [grid requestors]
     (let [c-reqs (grid-keys grid)]
@@ -189,13 +192,23 @@
   (first (get-in current-grid [0 0]))
   (grid-keys current-grid)
 
-  (color-match (clojure.edn/read-string
-                 (:cells (first (db/get-current-grid))))
-               @j-atom)
+  (require '[alloc-ui.util.color-pallet :as cp])
+  (cp/color-match (clojure.edn/read-string
+                    (:cells (first (db/get-current-grid))))
+    @j-atom)
 
   ())
 
+(comment
+  (def requests {"j" #{[0 0] [[1 2 3] 1]},
+                 "k" #{[3 0] [0 2]},
+                 "l" #{[[2 3] 0] [[2 3] 2] [[2 3] 1]},
+                 "m" #{[[2 3] 2] [[0 1 2] 1]}})
 
+  (analyze-combinations requests)
+
+
+  ())
 
 
 
