@@ -79,7 +79,8 @@
 
   (rf/dispatch-sync [:init-db])
   (rf/dispatch-sync [:fetch-current-grid])
-  (rf/dispatch [:allocate (pr-str @(rf/subscribe [:local-requests]))])
+  (prn "ALLOCATE" (pr-str @(rf/subscribe [:local-requests])))
+  ;(rf/dispatch [:allocate (pr-str @(rf/subscribe [:local-requests]))])
 
   (start-up/hook-browser-navigation!)
   (mount-components))

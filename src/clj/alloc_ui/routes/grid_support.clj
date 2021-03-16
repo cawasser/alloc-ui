@@ -76,11 +76,14 @@
                              adjusted-reqs))})))
 
 
-; before change
-;{j #{[0 0] [[1 2 3] 1]}, k #{[3 0] [0 2]}, l #{[[2 3] 0] [[2 3] 2] [[2 3] 1]}, m #{[[2 3] 2] [[0 1 2] 1]}}
-
-; after change
 ;
+
+; before change
+; ALLOCATE:  "{\"j\" #{[0 0] [[1 2 3] 1]}, \"k\" #{[3 0] [0 2]}, \"l\" #{[[2 3] 0] [[2 3] 2] [[2 3] 1]}, \"m\" #{[[2 3] 2] [[0 1 2] 1]}}"
+; SERVER: {j #{[0 0] [[1 2 3] 1]}, k #{[3 0] [0 2]}, l #{[[2 3] 0] [[2 3] 2] [[2 3] 1]}, m #{[[2 3] 2] [[0 1 2] 1]}}
+
+; after change (expounded-requests)
+; CLIENT: {"k" #{[3 0] [0 2]}, "l" #{[[2 3] 0] [[2 3] 2] [[2 3] 1]}, "m" #{[[2 3] 2] [[0 1 2] 1]}, "j" #{[0 0] [[1 2 3] 1]}}
 
 (defn analyze-combinations
   "analyses all possible combinations of the individual requests

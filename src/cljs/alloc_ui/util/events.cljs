@@ -11,12 +11,12 @@
 (defn- set-version [db message]
   (prn "set-version" message)
   (assoc-in db [:data :last-service-version]
-            (get message :service-version)))
+    (get message :service-version)))
 
 (defn- set-sha [db message]
   (prn "set-version" message)
   (assoc-in db [:data :last-service-sha]
-            (get message :service-sha)))
+    (get message :service-sha)))
 
 
 ;;dispatchers
@@ -24,22 +24,22 @@
 (rf/reg-event-db
   :navigate
   (fn-traced [db [_ route]]
-             (prn ":navigate")
-             (assoc db :route route)))
+    (prn ":navigate")
+    (assoc db :route route)))
 
 
 
 (rf/reg-event-db
   :init-db
   (fn-traced [db [_]]
-             (prn ":init-db")
-             (assoc db :data {:last-service-version d-d/default-last-service-version
-                              :last-service-sha d-d/default-last-service-sha
-                              :current              {:grid d-d/current-grid}
-                              :local                {:grid               d-d/potential-grid
-                                                     :requests           d-d/requests
-                                                     :potential-requests #{}
-                                                     :combos             []}})))
+    (prn ":init-db")
+    (assoc db :data {:last-service-version d-d/default-last-service-version
+                     :last-service-sha     d-d/default-last-service-sha
+                     :current              {:grid d-d/current-grid}
+                     :local                {:grid               d-d/potential-grid
+                                            :requests           d-d/requests
+                                            :potential-requests #{}
+                                            :combos             []}})))
 
 
 
@@ -47,72 +47,74 @@
 (rf/reg-event-db
   :set-local-grid
   (fn-traced [db [_ grid]]
-             (assoc-in db [:data :local :grid] grid)))
+    (assoc-in db [:data :local :grid] grid)))
 
 (rf/reg-event-db
   :set-local-requests
   (fn-traced [db [_ requests]]
-             (assoc-in db [:data :local :requests] requests)))
+    (assoc-in db [:data :local :requests] requests)))
 
 (rf/reg-event-db
   :add-to-local-potential-requests
   (fn-traced [db [_ k]]
-             (assoc-in db [:data :local :potential-requests]
-                       (conj (-> db :data :local :potential-requests)
-                             k))))
+    (assoc-in db [:data :local :potential-requests]
+      (conj (-> db :data :local :potential-requests)
+        k))))
 
 
 (rf/reg-event-db
   :remove-from-local-potential-requests
   (fn-traced [db [_ k]]
-             (assoc-in db [:data :local :potential-requests]
-                       (disj (-> db :data :local :potential-requests)
-                             k))))
+    (assoc-in db [:data :local :potential-requests]
+      (disj (-> db :data :local :potential-requests)
+        k))))
 
 (rf/reg-event-db
   :set-current-grid
   (fn-traced [db [_ grid]]
-             (prn ":set-current-grid" grid)
-             (prn (get grid :service-version))
-             (prn ":set-current-grid un" (cljs.reader/read-string (:result grid)))
-             (-> db
-                 (set-version grid)
-                 (set-sha grid)
-                 (assoc-in [:data :current :grid] (cljs.reader/read-string
-                                                    (:result grid))))))
+    ;(prn ":set-current-grid" grid)
+    ;(prn (get grid :service-version))
+    ;(prn ":set-current-grid un" (cljs.reader/read-string (:result grid)))
+    (-> db
+      (set-version grid)
+      (set-sha grid)
+      (assoc-in [:data :current :grid] (cljs.reader/read-string
+                                         (:result grid))))))
 
 (rf/reg-event-fx
   :fetch-current-grid
   (fn-traced [_ _]
-             (prn ":fetch-current-grid")
-             {:http-xhrio {:method          :get
-                           :uri             "/api/grid"
-                           :response-format (ajax/json-response-format {:keywords? true})
-                           :on-success      [:set-current-grid]}}))
+    ;(prn ":fetch-current-grid")
+    {:http-xhrio {:method          :get
+                  :uri             "/api/grid"
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:set-current-grid]}}))
 
 (rf/reg-event-db
   :set-potential-grid-from-requests
   (fn-traced [db [_ results]]
-             (prn ":set-potential-grid-from-requests" results)
-             (let [res (cljs.reader/read-string (:result results))]
-               (prn ":set-potential..." res)
-               (-> db
-                   (set-version results)
-                   (set-sha results)
-                   (assoc-in [:data :local :grid] res)))))
+    (prn ":set-potential-grid-from-requests" results)
+    (let [res (cljs.reader/read-string (:result results))]
+      ;(prn ":set-potential..." res)
+      (-> db
+        (set-version results)
+        (set-sha results)
+        (assoc-in [:data :local :grid] res)))))
 
 
 (rf/reg-event-fx
   :allocate
-  (fn-traced [_ [_ requests]]
-             (prn ":allocate " requests)
-             {:http-xhrio {:method          :post
-                           :uri             "/api/request"
-                           :params          {:requests requests}
-                           :format          (ajax/json-request-format)
-                           :response-format (ajax/json-response-format {:keywords? true})
-                           :on-success      [:set-potential-grid-from-requests]
-                           :on-failure      [:common/set-error]}}))
+  (fn-traced [db [_ requests]]
+    ;(prn ":allocate " requests)
+    (let [r (into {} (map (partial rs/expound-requests (:db db)) requests))]
+      (prn "expounded requests "r)
+      {:http-xhrio {:method          :post
+                    :uri             "/api/request"
+                    :params          {:requests (pr-str r)}
+                    :format          (ajax/json-request-format)
+                    :response-format (ajax/json-response-format {:keywords? true})
+                    :on-success      [:set-potential-grid-from-requests]
+                    :on-failure      [:common/set-error]}})))
 
 
 
@@ -121,11 +123,11 @@
   (fn-traced
     [db [_ entry]]
     (assoc-in db [:data :local :combos]
-              (cons entry (-> db :data :local :combos)))))
+      (cons entry (-> db :data :local :combos)))))
 
 
 
 (rf/reg-event-db
   :common/set-error
   (fn-traced [db [_ error]]
-             (assoc db :common/error error)))
+    (assoc db :common/error error)))

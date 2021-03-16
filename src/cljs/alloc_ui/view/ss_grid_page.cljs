@@ -18,19 +18,30 @@
         colors             (rf/subscribe [:color-matching])
         combos             (rf/subscribe [:local-combos])]
     (fn []
-     ; (prn "ssg-page" @combos @selected-requests)
       [:section.section {:style {:padding "0.5rem 1.5rem"}}
-       [:div.content {:style {:padding "0rem 1rem"}}
-        ;[:p "grid " (str @current-grid)]
-        ;[:p "reqs " (str @requests)]
-        ;[:p "colors " @colors]
-        [:p.title.is-5 {:style {:padding "0.5rem 4rem"}} "Request Candidates"]
-        ;(prn "ssg-page (2)" colors)
-        [rl/request-grid
-         @requests
-         @potential-requests
-         @combos
-         @colors]]
+       [:div.content {:style {:padding "0.70rem 3rem"}}
+        [:div.tile.is-ancestor
+         [:div.tile.is-8
+          [:div#req-grid.container
+           ;[:p "grid " (str @current-grid)]
+           [:p "selected reqs " (str @potential-requests)]
+           ;[:p "colors " @colors]
+           [:p.title.is-5 {:style {:padding "0.5rem 4rem"}} "Request Candidates"]
+           ;(prn "ssg-page (2)" colors)
+           [rl/request-grid
+            @requests
+            @potential-requests
+            @combos
+            @colors]]]
+         [:div.tile.is-1]
+         [:div.tile.is-1
+          [:div#req-buttons.container
+           [:p.title.is-5.has-text-centered "Buttons"]
+           [:button "New"]
+           [:button {:on-click #(rf/dispatch [:allocate (pr-str @potential-requests)])}
+            "Check"]
+           [:button "Commit"]]]]]
+
        [:div.content {:style {:padding "0.70rem 3rem"}}
         [:div.tile.is-ancestor
          [:div.tile.is-4
