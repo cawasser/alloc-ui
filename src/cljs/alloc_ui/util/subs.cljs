@@ -22,15 +22,22 @@
 (rf/reg-sub
   :local-grid
 
-  :<- [:local-potential-requests]
+  ;:<- [:local-potential-requests]
+  :<- [:selected-request-set]
   :<- [:all-local-grid]
   :<- [:local-combos]
 
-  (fn [[local-requests all-local-grid local-combos] _]
-    (prn ":local-grid" local-requests ", " local-combos)
-    (if (contains? (into #{} local-combos) local-requests)
-      (get all-local-grid local-requests)
+  (fn [[selected all-local-grid local-combos] _]
+    (prn ":local-grid" selected ", " local-combos)
+    (if (contains? (into #{} local-combos) selected)
+      (get all-local-grid selected)
       (get all-local-grid #{}))))
+
+
+(rf/reg-sub
+  :selected-request-set
+  (fn [db _]
+    (-> db :data :local :selected-request-set)))
 
 
 

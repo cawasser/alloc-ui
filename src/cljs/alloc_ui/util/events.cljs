@@ -117,6 +117,12 @@
                     :on-failure      [:common/set-error]}})))
 
 
+(rf/reg-event-db
+  :selected-request-set
+  (fn-traced [db [_ new-selection]]
+    (prn ":selected-request-set" new-selection)
+    (assoc-in db [:data :local :selected-request-set] new-selection)))
+
 
 (rf/reg-event-db
   :new-combo
