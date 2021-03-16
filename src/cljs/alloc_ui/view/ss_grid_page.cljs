@@ -12,11 +12,14 @@
   with a single potential-allocation-grid"
   [selection]
   (let [selected-request-set (rf/subscribe [:selected-request-set])
-        color                (if (= selection @selected-request-set) "is-small is-info" "is-small")
+        color                (if (= selection @selected-request-set)
+                               "is-small is-light is-info"
+                               "is-small is-light")
         click-fn             #(do
                                 (prn "on-click" selection)
                                 (rf/dispatch [:selected-request-set selection]))]
-    [:div
+    [:div {:style {:display :flex :margin-right "4px"
+                   :border  "0.5px" :border-radius ".5px"}}
      [:button.button {:class color :on-click click-fn} "<"]
      [:button.button {:class color :on-click click-fn} (str selection)]
      [:button.button {:class color :on-click click-fn} ">"]]))
@@ -68,9 +71,9 @@
          [:div.tile.is-4
           [:div.container
            [:p.title.is-5.has-text-centered "Potential Allocation"]
-           [:div
-            [:p @selected-request-set]
-            (let [possibilities (keys @all-potentials)]
+           [:div {:style {:width "100%" :display :flex}}
+            ;[:p @selected-request-set]
+            (let [possibilities (keys (dissoc @all-potentials #{}))]
               (doall
                 (map (fn [x]
                        ^{:key x} [selector x]) possibilities)))]

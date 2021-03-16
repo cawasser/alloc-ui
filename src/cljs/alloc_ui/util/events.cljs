@@ -99,7 +99,8 @@
       (-> db
         (set-version results)
         (set-sha results)
-        (assoc-in [:data :local :grid] res)))))
+        (assoc-in [:data :local :grid] res)
+        (assoc-in [:data :local :selected-request-set] #{})))))
 
 
 (rf/reg-event-fx

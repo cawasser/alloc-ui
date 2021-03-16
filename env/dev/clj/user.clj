@@ -41,3 +41,9 @@
   (migrations/create name (select-keys env [:database-url])))
 
 
+
+(comment
+  (def d {#{} [] #{"a"} [] #{"a" "b"} []})
+  (dissoc d #{"a"})
+
+  ())
