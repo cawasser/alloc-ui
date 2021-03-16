@@ -39,6 +39,7 @@
                  [selmer "1.12.12"]
                  [loco "0.3.1"]
                  [trptcolin/versioneer "0.2.0"]
+                 [ch.qos.logback/logback-classic "1.1.3"]
 
                  ;thi.ng
                  [thi.ng/geom "1.0.0-RC3"]
@@ -70,7 +71,7 @@
   :figwheel
   {:http-server-root "public"
    :server-logfile "log/figwheel-logfile.log"
-   :nrepl-port 7002
+   :nrepl-port 7772
    :css-dirs ["resources/public/css"]
    :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
 

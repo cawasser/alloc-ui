@@ -4,7 +4,8 @@
             [alloc-ui.grid.allocation :as a]
             [alloc-ui.sparse-grid.sparse-grid :as sparse-a]
             [alloc-ui.sparse-grid.sparse-request-rules :as sparse-r]
-            [clojure.math.combinatorics :as combo]))
+            [clojure.math.combinatorics :as combo]
+            [clojure.tools.logging :as log]))
 
 
 (def current-grid [[#{"a"} #{} #{} #{} #{}]
@@ -75,6 +76,11 @@
                              adjusted-reqs))})))
 
 
+; before change
+;{j #{[0 0] [[1 2 3] 1]}, k #{[3 0] [0 2]}, l #{[[2 3] 0] [[2 3] 2] [[2 3] 1]}, m #{[[2 3] 2] [[0 1 2] 1]}}
+
+; after change
+;
 
 (defn analyze-combinations
   "analyses all possible combinations of the individual requests
@@ -87,7 +93,7 @@
                                     clojure.edn/read-string)))
 
   ([requests grid]
-   (prn (str "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" requests "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"))
+   (log/info "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" requests)
    (->> requests
 
      ; convert the request map to a collection of vectors so we
