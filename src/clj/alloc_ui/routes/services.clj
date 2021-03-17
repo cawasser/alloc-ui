@@ -87,7 +87,7 @@
                          :body {:service-version (get-version)
                                 :service-sha (get-sha)
                                 :result (pr-str
-                                          (gs/analyze-combinations
+                                          (gs/analyze-combinations-multi
                                             (clojure.edn/read-string
                                               requests)))}})}}]])
 
@@ -109,6 +109,21 @@
   ;      sparse-request-rules/pick-out-results [:adjusted-requests]
   ;      (into {})))
 
+
+  ; want to move to:
+
+  ;(-> request
+  ;  grid-support/analyze-combinations-multi
+  ;    (->
+  ;      get-all-the-possible-combinations-of-requests [combo/subsets]
+  ;      turn-the-results-back-into-a-map-for-further-processing [flatten, apply]
+  ;      grid-support/apply-requests-to-grid-multi
+  ;        (->
+  ;          (map sparse-r/generate-acceptable-requests-multi)
+  ;          grid-support/null-tx
+  ;          (map (map sparse-grid/test-requests)))
+  ;      sparse-request-rules/pick-out-results [:adjusted-requests]
+  ;      (into {})))
   ())
 
 
