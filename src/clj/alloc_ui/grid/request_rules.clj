@@ -319,6 +319,32 @@
       ; turn the solution back into a REQUEST
       (make-request ids))))
 
+(defn generate-acceptable-requests-multi
+  "take a set of requests with possible flexible needs and
+   return ALL setS of requests where those needs are locked
+   down so that all the requests can work"
+
+  [grid requests]
+  (let [all-reqs (merge-with clojure.set/union
+                   requests
+                   (reqs-from-grid grid))
+        ids      (id-map all-reqs)]
+
+    (->>
+      ; take the requests
+      all-reqs
+
+      ; build all the constraints
+      (build-all-constraints ids)
+
+      ; solve the constraints
+      solutions
+
+      ; pull out all the slots that came from the original grid
+      (map #(clean-up-requests grid %))
+
+      ; turn the solution back into a REQUEST
+      (map #(make-request ids %)))))
 
 
 

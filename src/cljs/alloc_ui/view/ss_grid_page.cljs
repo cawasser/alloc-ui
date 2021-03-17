@@ -57,7 +57,8 @@
          [:div.tile.is-1
           [:div#req-buttons.container
            [:button.button.is-info.is-outlined "New"]
-           [:button.button.is-primary.is-outlined {:on-click #(rf/dispatch [:allocate (pr-str @potential-requests)])}
+           [:button.button.is-primary.is-outlined
+            {:on-click #(rf/dispatch [:allocate @potential-requests])}
             "Check"]
            [:button.button.is-danger "Commit"]]]]]
 

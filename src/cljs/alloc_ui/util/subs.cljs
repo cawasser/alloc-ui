@@ -28,7 +28,7 @@
   :<- [:local-combos]
 
   (fn [[selected all-local-grid local-combos] _]
-    (prn ":local-grid" selected ", " local-combos)
+    ;(prn ":local-grid" selected ", " local-combos)
     (if (contains? (into #{} local-combos) selected)
       (get all-local-grid selected)
       (get all-local-grid #{}))))

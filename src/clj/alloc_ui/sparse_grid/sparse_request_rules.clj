@@ -288,7 +288,7 @@
 
 (defn generate-acceptable-requests
       "take a set of requests with possible flexible needs and
-       return a set of requests where those needs are locked
+       return a SINGLE set of requests where those needs are locked
        down so that all the requests can work"
 
   [grid requests]
@@ -317,6 +317,21 @@
       (make-request ids))))
 
 
+(defn generate-acceptable-requests-multi
+  "this variant returns ALL the valid combinations for the requests"
+
+  [grid requests]
+
+  (let [all-reqs (merge-with clojure.set/union
+                   (expand-request requests)
+                   (reqs-from-grid grid))
+        ids      (id-map all-reqs)]
+    (->> all-reqs
+      (build-all-constraints ids)
+      solutions
+      (map remove-unassigned)
+      (map #(clean-up-requests grid %))
+      (map #(make-request ids %)))))
 
 
 ; TESTS
@@ -378,6 +393,14 @@
   ; "c" #{[3 3] [3 4] [4 4]}}
 
 
+
+; update the pipeline to work with the multiple results from (solutions)
+(comment
+  (generate-acceptable-requests-multi sg/empty-grid requests-2)
+  (generate-acceptable-requests-multi used-grid requests-2)
+  (generate-acceptable-requests-multi used-grid-2 requests-1)
+
+  ())
 
 (generate-acceptable-requests sg/empty-grid requests-2)
 (generate-acceptable-requests used-grid requests-2)

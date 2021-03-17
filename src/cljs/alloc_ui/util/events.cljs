@@ -9,12 +9,12 @@
 
 
 (defn- set-version [db message]
-  (prn "set-version" message)
+  ;(prn "set-version" message)
   (assoc-in db [:data :last-service-version]
     (get message :service-version)))
 
 (defn- set-sha [db message]
-  (prn "set-version" message)
+  ;(prn "set-version" message)
   (assoc-in db [:data :last-service-sha]
     (get message :service-sha)))
 
@@ -93,7 +93,7 @@
 (rf/reg-event-db
   :set-potential-grid-from-requests
   (fn-traced [db [_ results]]
-    (prn ":set-potential-grid-from-requests" results)
+    ;(prn ":set-potential-grid-from-requests" results)
     (let [res (cljs.reader/read-string (:result results))]
       ;(prn ":set-potential..." res)
       (-> db
@@ -102,16 +102,25 @@
         (assoc-in [:data :local :grid] res)
         (assoc-in [:data :local :selected-request-set] #{})))))
 
+(def last-request (atom {}))
+
+
+(defn- internal-ex [db requests]
+  (prn "internal-ex" requests)
+  (into {}
+   (map (partial rs/expound-requests (:db db))
+     requests)))
 
 (rf/reg-event-fx
   :allocate
   (fn-traced [db [_ requests]]
-    ;(prn ":allocate " requests)
-    (let [r (into {} (map (partial rs/expound-requests (:db db)) requests))]
-      (prn "expounded requests "r)
+    (prn ":allocate" requests) ;"/////" (:db db))
+    (let [ex (internal-ex db requests)]
+      (prn "expounded requests " ex)
+      (reset! last-request ex)
       {:http-xhrio {:method          :post
                     :uri             "/api/request"
-                    :params          {:requests (pr-str r)}
+                    :params          {:requests (pr-str ex)}
                     :format          (ajax/json-request-format)
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [:set-potential-grid-from-requests]
@@ -121,7 +130,7 @@
 (rf/reg-event-db
   :selected-request-set
   (fn-traced [db [_ new-selection]]
-    (prn ":selected-request-set" new-selection)
+    ;(prn ":selected-request-set" new-selection)
     (assoc-in db [:data :local :selected-request-set] new-selection)))
 
 
