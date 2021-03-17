@@ -12,6 +12,13 @@
     (contains? c k)))
 
 
+(defn- editable [id txt]
+  (let [toggle-fn #(rf/dispatch-sync [:editing id])]
+    ; TODO: replace the "BLUE" :td with an editable field that dispatches to [:update-request k txt]
+    (fn []
+      (if (= @(rf/subscribe [:editing]) id)
+        [:td {:style {:background-color :cyan} :on-click toggle-fn} txt]
+        [:td {:style {:background-color :white} :on-click toggle-fn} txt]))))
 
 (defn request-grid
   ""
@@ -37,32 +44,16 @@
            ^{:key k}
            [:tr
             ;(if (some true? (any-combo combos k))
-              ^{:key (str "inc-" k)}
-              [:td.is-narrow
-               {:on-click #(do
-                             (if (contains? potential-requests k)
-                               (rf/dispatch-sync [:remove-from-local-potential-requests k])
-                               (rf/dispatch-sync [:add-to-local-potential-requests k])))}
+            ^{:key (str "inc-" k)}
+            [:td.is-narrow
+             {:on-click #(do
+                           (if (contains? potential-requests k)
+                             (rf/dispatch-sync [:remove-from-local-potential-requests k])
+                             (rf/dispatch-sync [:add-to-local-potential-requests k])))}
 
-               (if (contains? potential-requests k)
-                 [:span.icon.has-text-success.is-small [:i.material-icons :done]]
-                 [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
-
-              ;^{:key (str "inc-" k)}
-              ;[:td.is-narrow [:span.icon.has-text-danger.is-small
-              ;                [:i.material-icons :highlight_off]]])
-
-            ;(doall
-            ;  (for [[idx c] (map-indexed vector (any-combo combos k))]
-            ;    (if c
-            ;      ^{:key (str idx "-" k)}
-            ;      [:td.is-narrow (if (contains? potential-requests k)
-            ;                       (if (contains? (into #{} combos) potential-requests)
-            ;                         [:i.material-icons.has-text-success :check_circle]
-            ;                         [:i.material-icons.has-text-danger :check_circle])
-            ;                       [:i.material-icons.has-text-grey-lighter :done])]
-            ;      ^{:key (str idx "-" k)}
-            ;      [:td.is_narrow ""])))
+             (if (contains? potential-requests k)
+               [:span.icon.has-text-success.is-small [:i.material-icons :done]]
+               [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
 
             ^{:key (str "all-" k)}
             [:td {:style {:background-color (first (get color-match k))
@@ -70,7 +61,7 @@
              (str k)]
 
             (let [txt (for [a r] (str a "     "))]
-              ^{:key (str "req-" txt)} [:td txt])])))]]])
+              ^{:key (str "req-" txt)} [editable k txt])])))]]])
 
 
 

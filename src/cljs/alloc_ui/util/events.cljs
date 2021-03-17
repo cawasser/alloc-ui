@@ -39,7 +39,8 @@
                      :local                {:grid               d-d/potential-grid
                                             :requests           d-d/requests
                                             :potential-requests #{}
-                                            :combos             []}})))
+                                            :combos             []
+                                            :editing            ""}})))
 
 
 
@@ -108,13 +109,13 @@
 (defn- internal-ex [db requests]
   (prn "internal-ex" requests)
   (into {}
-   (map (partial rs/expound-requests (:db db))
-     requests)))
+    (map (partial rs/expound-requests (:db db))
+      requests)))
 
 (rf/reg-event-fx
   :allocate
   (fn-traced [db [_ requests]]
-    (prn ":allocate" requests) ;"/////" (:db db))
+    (prn ":allocate" requests)                              ;"/////" (:db db))
     (let [ex (internal-ex db requests)]
       (prn "expounded requests " ex)
       (reset! last-request ex)
@@ -147,3 +148,10 @@
   :common/set-error
   (fn-traced [db [_ error]]
     (assoc db :common/error error)))
+
+
+
+(rf/reg-event-db
+  :editing
+  (fn-traced [db [_ id]]
+    (assoc-in db [:data :local :editing] id)))

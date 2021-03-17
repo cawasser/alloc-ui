@@ -153,6 +153,45 @@
      (into {}))))
 
 
+(defn analyze-combinations-multi
+  "analyses all possible combinations of the individual requests
+  and results into a format for the client to use"
+
+  ([requests]
+   (analyze-combinations-multi requests (-> (db/get-current-grid)
+                                          first
+                                          :cells
+                                          clojure.edn/read-string)))
+
+  ([requests grid]
+   (log/info "analyze-combinations" requests)
+   (reset! last-request requests)
+   (reset! last-grid grid)
+   (->> requests
+
+     ; convert the request map to a collection of vectors so we
+     ; can use a request as a single datum (rather than a k-v)
+     seq
+
+     ;  gets all the possible combinations of requests
+     combo/subsets
+
+     ; turn the results back into a map for further processing
+     (map (fn [x] (flatten x)))
+     (map (fn [x] (apply hash-map x)))
+
+     ; run each through the solver
+     (map (fn [x] (apply-requests-to-grid-multi x grid)))
+
+     ; pick out the results
+     (map (fn [x]
+            {(into #{} (keys (:adjusted-requests x)))
+             (-> x :tx :after)}))
+
+     ; and put everything into a single map (this serves to compress
+     ; out the multiple copies of the #{} key...)
+     (into {}))))
+
 (comment
   (->> @last-request
     seq)

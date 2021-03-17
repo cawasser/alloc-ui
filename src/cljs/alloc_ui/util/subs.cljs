@@ -105,3 +105,9 @@
   :last-service-sha
   (fn [db _]
     (-> db :data :last-service-sha)))
+
+
+(rf/reg-sub
+  :editing
+  (fn [db _]
+    (-> db :data :local :editing)))
