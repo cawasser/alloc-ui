@@ -24,20 +24,31 @@
 
   ;:<- [:local-potential-requests]
   :<- [:selected-request-set]
+  :<- [:selected-request-subset]
   :<- [:all-local-grid]
   :<- [:local-combos]
 
-  (fn [[selected all-local-grid local-combos] _]
+  (fn [[selected subset all-local-grid local-combos] _]
     ;(prn ":local-grid" selected ", " local-combos)
     (if (contains? (into #{} local-combos) selected)
-      (get all-local-grid selected)
+      (get-in all-local-grid [selected subset])
       (get all-local-grid #{}))))
 
+
+(rf/reg-sub
+  :selected-request-subset
+  (fn [db _]
+    (-> db :data :local :selected-request-subset)))
 
 (rf/reg-sub
   :selected-request-set
   (fn [db _]
     (-> db :data :local :selected-request-set)))
+
+(rf/reg-sub
+  :selected-request-subset-limit
+  (fn [db _]
+    (-> db :data :local :selected-request-subset-limit)))
 
 
 

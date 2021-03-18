@@ -96,12 +96,15 @@
   (fn-traced [db [_ results]]
     ;(prn ":set-potential-grid-from-requests" results)
     (let [res (cljs.reader/read-string (:result results))]
-      ;(prn ":set-potential..." res)
+      (prn ":set-potential-grid-from-requests" (-> res keys second) (count (get res (-> res keys second))))
       (-> db
         (set-version results)
         (set-sha results)
         (assoc-in [:data :local :grid] res)
-        (assoc-in [:data :local :selected-request-set] #{})))))
+        (assoc-in [:data :local :selected-request-set] (-> res keys second))
+        (assoc-in [:data :local :selected-request-subset] 0)
+        (assoc-in [:data :local :selected-request-subset-limit]
+          (count (get res (-> res keys second))))))))
 
 (def last-request (atom {}))
 
@@ -131,8 +134,33 @@
 (rf/reg-event-db
   :selected-request-set
   (fn-traced [db [_ new-selection]]
-    ;(prn ":selected-request-set" new-selection)
-    (assoc-in db [:data :local :selected-request-set] new-selection)))
+    (prn ":selected-request-set" new-selection (count (get-in db [:data :local :grid new-selection])))
+    (-> db
+      (assoc-in [:data :local :selected-request-set] new-selection)
+      (assoc-in [:data :local :selected-request-subset] 0)
+      (assoc-in [:data :local :selected-request-subset-limit]
+        (count (get-in db [:data :local :grid new-selection]))))))
+
+
+
+(rf/reg-event-db
+  :inc-selected-request-subset
+  (fn-traced [db [_]]
+    (let [n (-> db :data :local :selected-request-subset inc)]
+      (prn ":inc-selected-request-subset" n (-> db :data :local :selected-request-subset-limit))
+      (if (< n (-> db :data :local :selected-request-subset-limit))
+        (assoc-in db [:data :local :selected-request-subset] n)
+        db))))
+
+
+(rf/reg-event-db
+  :dec-selected-request-subset
+  (fn-traced [db [_]]
+    (let [n (-> db :data :local :selected-request-subset dec)]
+      (prn ":dec-selected-request-subset" n)
+      (if (<= 0 n)
+        (assoc-in db [:data :local :selected-request-subset] n)
+        db))))
 
 
 (rf/reg-event-db

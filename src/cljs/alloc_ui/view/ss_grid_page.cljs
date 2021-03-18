@@ -11,18 +11,30 @@
   "selection is the string denoting the collection of requesters associated
   with a single potential-allocation-grid"
   [selection]
-  (let [selected-request-set (rf/subscribe [:selected-request-set])
-        color                (if (= selection @selected-request-set)
-                               "is-small is-light is-info"
-                               "is-small is-light")
-        click-fn             #(do
-                                (prn "on-click" selection)
-                                (rf/dispatch [:selected-request-set selection]))]
+  (let [selected-request-set    (rf/subscribe [:selected-request-set])
+        selected-request-subset @(rf/subscribe [:selected-request-subset])
+        upper-limit             @(rf/subscribe [:selected-request-subset-limit])
+        low-limit               (<= selected-request-subset 0)
+        up-limit                (<= (dec upper-limit) selected-request-subset)
+        not-me                  (not= @selected-request-set selection)
+        color                   (if (= selection @selected-request-set)
+                                  "is-small is-light is-info"
+                                  "is-small is-light")
+        inc-fn                  #(do
+                                   (prn ":inc-selected-request-subset")
+                                   (rf/dispatch [:inc-selected-request-subset]))
+        dec-fn                  #(do
+                                   (prn ":dec-selected-request-subset")
+                                   (rf/dispatch [:dec-selected-request-subset]))
+        click-fn                #(do
+                                   (prn "click" selection)
+                                   (rf/dispatch [:selected-request-set selection]))]
+    (prn "selector" selection selected-request-subset upper-limit low-limit up-limit)
     [:div {:style {:display :flex :margin-right "4px"
                    :border  "0.5px" :border-radius ".5px"}}
-     [:button.button {:class color :on-click click-fn} "<"]
+     [:button.button {:class color :on-click dec-fn :disabled (or not-me low-limit)} "<"]
      [:button.button {:class color :on-click click-fn} (str selection)]
-     [:button.button {:class color :on-click click-fn} ">"]]))
+     [:button.button {:class color :on-click inc-fn :disabled (or not-me up-limit)} ">"]]))
 
 (defn ssg-page
   ""
