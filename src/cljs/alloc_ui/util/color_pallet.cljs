@@ -3,7 +3,7 @@
 (def color-pallet [["green" "white"] ["blue" "white"] ["orange" "black"]
                    ["grey" "white"] ["cornflowerblue" "white"] ["darkcyan" "white"]
                    ["goldenrod" "black"] ["khaki" "black"] ["deepskyblue" "black"]
-                   ["navy" "white"] ["red" "white"] ["orangered" "white"]])
+                   ["navy" "white"] ["cyan" "black"] ["orangered" "white"]])
 
 
 (defn- grid-keys [grid]
@@ -16,5 +16,5 @@
 
 
 (defn color-match [grid requestors]
-  (zipmap (concat (grid-keys grid) (keys requestors)) color-pallet))
+  (zipmap (concat (grid-keys grid) (keys requestors)) (cycle color-pallet)))
 
