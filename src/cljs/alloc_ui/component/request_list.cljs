@@ -24,10 +24,13 @@
   ""
   [requests potential-requests combos color-match]
 
-  ;[:div.container
   ;(prn "request-grid" requests ;potential-requests combos color-match)
-  [:table-container
-   [:table.is-hoverable
+  [:div.table-container {:style {:width       "100%"
+                                 :height      "15em"
+                                 :overflow-y  :auto
+                                 :white-space :nowrap
+                                 :border      "1px outset gray"}}
+   [:table.table
     [:thead
      ; TODO figure out how to do a spanning header across the check marks
      [:tr [:th "Include?"]

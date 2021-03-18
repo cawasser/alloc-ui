@@ -46,4 +46,8 @@
   (def d {#{} [] #{"a"} [] #{"a" "b"} []})
   (dissoc d #{"a"})
 
+  (def reqs (keys d))
+
+  (sort-by count reqs)
+
   ())
