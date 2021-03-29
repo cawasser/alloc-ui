@@ -11,16 +11,38 @@
   (for [c combos]
     (contains? c k)))
 
+(defn input-field [tag id data]
+  (let [change-re (atom data)]
+    [:div.field
+     [tag
+      {:type        :text
+       :value @change-re
+       :on-blur     #(do
+                       ; (prn "change" id (-> % .-target .-value)))}]])
+                       (rf/dispatch-sync [:set-key id (js/parseInt (-> % .-target .-value))])
+                       (reset! change-re (-> % .-target .-value)))}]]))
+
+(defn- editable [id txt]
+  (let [toggle-fn #(rf/dispatch-sync [:editing id])]
+    ; TODO: replace the "BLUE" :td with an editable field that dispatches to [:update-request k txt]
+    (fn []
+      (if (= @(rf/subscribe [:editing]) id)
+        [:td {:style {:background-color :cyan} :on-click toggle-fn} [input-field :input.input :x (str "...." txt)]]
+        [:td {:style {:background-color :white} :on-click toggle-fn} txt]))))
+
 
 
 (defn request-grid
   ""
   [requests potential-requests combos color-match]
 
-  ;[:div.container
-  (prn "request-grid" requests potential-requests combos color-match)
-  [:table-container
-   [:table.is-hoverable
+  ;(prn "request-grid" requests ;potential-requests combos color-match)
+  [:div.table-container {:style {:width       "100%"
+                                 :height      "15em"
+                                 :overflow-y  :auto
+                                 :white-space :nowrap
+                                 :border      "1px outset gray"}}
+   [:table.table
     [:thead
      ; TODO figure out how to do a spanning header across the check marks
      [:tr [:th "Include?"]
@@ -37,16 +59,16 @@
            ^{:key k}
            [:tr
             ;(if (some true? (any-combo combos k))
-              ^{:key (str "inc-" k)}
-              [:td.is-narrow
-               {:on-click #(do
-                             (if (contains? potential-requests k)
-                               (rf/dispatch-sync [:remove-from-local-potential-requests k])
-                               (rf/dispatch-sync [:add-to-local-potential-requests k])))}
+            ^{:key (str "inc-" k)}
+            [:td.is-narrow
+             {:on-click #(do
+                           (if (contains? potential-requests k)
+                             (rf/dispatch-sync [:remove-from-local-potential-requests k])
+                             (rf/dispatch-sync [:add-to-local-potential-requests k])))}
 
-               (if (contains? potential-requests k)
-                 [:span.icon.has-text-success.is-small [:i.material-icons :done]]
-                 [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
+             (if (contains? potential-requests k)
+               [:span.icon.has-text-success.is-small [:i.material-icons :done]]
+               [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
 
               ;^{:key (str "inc-" k)}
               ;[:td.is-narrow [:span.icon.has-text-danger.is-small
