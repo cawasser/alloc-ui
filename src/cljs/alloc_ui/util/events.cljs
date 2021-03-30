@@ -39,7 +39,8 @@
                      :local                {:grid               d-d/potential-grid
                                             :requests           d-d/requests
                                             :potential-requests #{}
-                                            :combos             []}})))
+                                            :combos             []
+                                            :editing            ""}})))
 
 
 
