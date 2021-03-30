@@ -1,8 +1,8 @@
 (ns alloc-ui.component.request-list
   (:require
     [reagent.core :as r]
-    [re-frame.core :as rf]
-    [alloc-ui.component.dynamic-grid :as grid]))
+    [re-frame.core :as rf]))
+    ;[alloc-ui.component.dynamic-grid :as grid]))
 
 
 (defn- any-combo
@@ -69,22 +69,6 @@
              (if (contains? potential-requests k)
                [:span.icon.has-text-success.is-small [:i.material-icons :done]]
                [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
-
-              ;^{:key (str "inc-" k)}
-              ;[:td.is-narrow [:span.icon.has-text-danger.is-small
-              ;                [:i.material-icons :highlight_off]]])
-
-            ;(doall
-            ;  (for [[idx c] (map-indexed vector (any-combo combos k))]
-            ;    (if c
-            ;      ^{:key (str idx "-" k)}
-            ;      [:td.is-narrow (if (contains? potential-requests k)
-            ;                       (if (contains? (into #{} combos) potential-requests)
-            ;                         [:i.material-icons.has-text-success :check_circle]
-            ;                         [:i.material-icons.has-text-danger :check_circle])
-            ;                       [:i.material-icons.has-text-grey-lighter :done])]
-            ;      ^{:key (str idx "-" k)}
-            ;      [:td.is_narrow ""])))
 
             ^{:key (str "all-" k)}
             [:td {:style {:background-color (first (get color-match k))
@@ -153,9 +137,6 @@
   (for [r requests]
     (let [[a rs] r]
       {"included"     :false
-       ;"a"            (any-combo combos a)
-       ;"b"            (any-combo combos a)
-       ;"c"            (any-combo combos a)
        "allocated-to" a
        "requests"     rs
        "bg-color"     (first (get color-match a))
@@ -167,11 +148,11 @@
   [requests potential-requests combos color-match]
 
   (fn []
-
-    (let [p-reqs (process-requests requests @combos color-match)]
-      [:div.container
-       [grid/grid {:num-rows     5
-                   :rowHeight    30
-                   :headerHeight 40
-                   :columns      columns
-                   :data         (into [] p-reqs)}]])))
+    [:p "dummy"]))
+    ;(let [p-reqs (process-requests requests @combos color-match)]
+    ;  [:div.container
+    ;   [grid/grid {:num-rows     5
+    ;               :rowHeight    30
+    ;               :headerHeight 40
+    ;               :columns      columns
+    ;               :data         (into [] p-reqs)}]])))

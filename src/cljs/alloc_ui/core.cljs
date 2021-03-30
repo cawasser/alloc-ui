@@ -2,6 +2,7 @@
   (:require
     [day8.re-frame.http-fx]
     [reagent.core :as r]
+    [reagent.dom :as rd]
     [re-frame.core :as rf]
     [markdown.core :refer [md->html]]
     [alloc-ui.ajax :as ajax]
@@ -70,7 +71,7 @@
 ;; Initialize app
 (defn mount-components []
   (rf/clear-subscription-cache!)
-  (r/render [#'page] (.getElementById js/document "app")))
+  (rd/render [#'page] (.getElementById js/document "app")))
 
 
 (defn init! []
