@@ -36,11 +36,11 @@
     (assoc db :data {:last-service-version d-d/default-last-service-version
                      :last-service-sha     d-d/default-last-service-sha
                      :current              {:grid d-d/current-grid}
-                     :local                {:grid               d-d/potential-grid
-                                            :requests           d-d/requests
-                                            :potential-requests #{}
-                                            :combos             []
-                                            :editing            ""}})))
+                     :local                {:all-potential-grids          d-d/potential-grid
+                                            :requests                     d-d/requests
+                                            :requests-under-consideration #{}
+                                            :combos                       []
+                                            :editing                      ""}})))
 
 
 
@@ -48,7 +48,7 @@
 (rf/reg-event-db
   :set-local-grid
   (fn-traced [db [_ grid]]
-    (assoc-in db [:data :local :grid] grid)))
+    (assoc-in db [:data :local :all-potential-grids] grid)))
 
 (rf/reg-event-db
   :set-local-requests
@@ -58,16 +58,16 @@
 (rf/reg-event-db
   :add-to-local-potential-requests
   (fn-traced [db [_ k]]
-    (assoc-in db [:data :local :potential-requests]
-      (conj (-> db :data :local :potential-requests)
+    (assoc-in db [:data :local :requests-under-consideration]
+      (conj (-> db :data :local :requests-under-consideration)
         k))))
 
 
 (rf/reg-event-db
   :remove-from-local-potential-requests
   (fn-traced [db [_ k]]
-    (assoc-in db [:data :local :potential-requests]
-      (disj (-> db :data :local :potential-requests)
+    (assoc-in db [:data :local :requests-under-consideration]
+      (disj (-> db :data :local :requests-under-consideration)
         k))))
 
 (rf/reg-event-db
@@ -100,7 +100,7 @@
       (-> db
         (set-version results)
         (set-sha results)
-        (assoc-in [:data :local :grid] res)
+        (assoc-in [:data :local :all-potential-grids] res)
         (assoc-in [:data :local :selected-request-set] (-> res keys second))
         (assoc-in [:data :local :selected-request-subset] 0)
         (assoc-in [:data :local :selected-request-subset-limit]
@@ -122,9 +122,9 @@
     (let [ex (internal-ex db requests)]
       (prn "expounded requests " ex)
       (reset! last-request ex)
-    ;(prn ":allocate " requests)
-    ;(let [r (into {} (map (partial rs/expound-requests (:db db)) requests))]
-    ;  (prn "expounded requests "r)
+      ;(prn ":allocate " requests)
+      ;(let [r (into {} (map (partial rs/expound-requests (:db db)) requests))]
+      ;  (prn "expounded requests "r)
       {:http-xhrio {:method          :post
                     :uri             "/api/request"
                     :params          {:requests (pr-str requests)}
@@ -137,12 +137,12 @@
 (rf/reg-event-db
   :selected-request-set
   (fn-traced [db [_ new-selection]]
-    (prn ":selected-request-set" new-selection (count (get-in db [:data :local :grid new-selection])))
+    (prn ":selected-request-set" new-selection (count (get-in db [:data :local :all-potential-grids new-selection])))
     (-> db
       (assoc-in [:data :local :selected-request-set] new-selection)
       (assoc-in [:data :local :selected-request-subset] 0)
       (assoc-in [:data :local :selected-request-subset-limit]
-        (count (get-in db [:data :local :grid new-selection]))))))
+        (count (get-in db [:data :local :all-potential-grids new-selection]))))))
 
 
 
@@ -185,4 +185,20 @@
 (rf/reg-event-db
   :editing
   (fn-traced [db [_ id]]
-    (assoc-in db [:data :local :editing] id)))
+    (-> db
+      (assoc-in [:data :local :editing] id)
+      (assoc-in [:data :local :editing-requests] (get-in db [:data :local :requests id])))))
+
+
+(rf/reg-event-db
+  ; TODO: make :new-requester a reg-event-fx to send the data to the server and round-trip
+  :new-requester
+  (fn-traced [db [_ requester requests]]
+    (assoc-in db [:data :local :requests requester] requests)))
+
+
+(rf/reg-event-db
+  ; TODO: make :new-requester a reg-event-fx to send the data to the server and round-trip
+  :edit-requests
+  (fn-traced [db [_ requester requests]]
+    (assoc-in db [:data :local :requests requester] requests)))

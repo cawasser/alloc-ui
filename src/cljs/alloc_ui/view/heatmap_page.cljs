@@ -11,7 +11,7 @@
   (let [current-grid       (rf/subscribe [:current-grid])
         potential-grid     (rf/subscribe [:local-grid])
         requests           (rf/subscribe [:local-requests])
-        potential-requests (rf/subscribe [:local-potential-requests])
+        potential-requests (rf/subscribe [:requests-under-consideration])
         colors             (rf/subscribe [:color-matching])
         combos             (rf/subscribe [:local-combos])]
     (fn []

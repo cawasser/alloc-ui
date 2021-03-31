@@ -28,6 +28,6 @@
            [i/input-element "requests" requests]]]]
         [:footer.modal-card-foot
          [:button.button.is-info {:on-click #(do
-                                               ; add a new requester entry
+                                               (rf/dispatch-sync [:new-requester @requester @requests])
                                                (reset! is-active false))} "Ok"]
          [:button.button {:on-click #(reset! is-active false)} "Cancel"]]]])))

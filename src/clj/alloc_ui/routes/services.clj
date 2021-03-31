@@ -82,12 +82,12 @@
                                      :service-sha     string?
                                      :result          string?}}}
             :handler    (fn [{{{:keys [requests]} :body} :parameters}]
-                          (log/info "POST /api/request" requests)
+                          (log/info "POST /api/request")
                           {:status 200
                            :body   {:service-version (get-version)
                                     :service-sha     (get-sha)
                                     :result          (pr-str
-                                                       (gs/analyze-combinations
+                                                       (gs/analyze-combinations-multi
                                                          (clojure.edn/read-string
                                                            requests)))}})}}]])
 

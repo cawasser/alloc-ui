@@ -39,14 +39,16 @@
 (defn ssg-page
   ""
   []
-  (let [current-grid         (rf/subscribe [:current-grid])
-        potential-grid       (rf/subscribe [:local-grid])
-        all-potentials       (rf/subscribe [:all-local-grid])
-        requests             (rf/subscribe [:local-requests])
-        potential-requests   (rf/subscribe [:local-potential-requests])
-        colors               (rf/subscribe [:color-matching])
-        combos               (rf/subscribe [:local-combos])
-        selected-request-set (rf/subscribe [:selected-request-set])]
+  (let [current-grid                 (rf/subscribe [:current-grid])
+        potential-grid               (rf/subscribe [:local-grid])
+        all-potentials               (rf/subscribe [:all-potential-grids])
+        requests                     (rf/subscribe [:local-requests])
+        requests-under-consideration (rf/subscribe [:requests-under-consideration])
+        colors                       (rf/subscribe [:color-matching])
+        combos                       (rf/subscribe [:local-combos])
+        selected-request-set         (rf/subscribe [:selected-request-set])
+        selected-potential-grids (rf/subscribe [:selected-potential-grids])]
+
 
     (fn []
       [:section.section {:style {:padding "0.5rem 1.5rem"}}
@@ -56,13 +58,13 @@
           [:div#req-grid.container
            ;[:p "grid " (str @current-grid)]
            ;[:p "potential " (str @potential-grid)]
-           ;[:p "selected reqs " (str @potential-requests)]
+           ;[:p "selected reqs " (str @requests-under-consideration)]
            ;[:p "colors " @colors]
            [:p.title.is-5 {:style {:padding "0.5rem 4rem"}} "Request Candidates"]
            ;(prn "ssg-page (2)" colors)
            [rl/request-grid
             requests
-            potential-requests
+            requests-under-consideration
             combos
             colors]]]]]
 
@@ -77,20 +79,28 @@
           [:div.container
            [:p.title.is-5.has-text-centered "Potential Allocation"]
            [:div {:style {:display :flex :margin-right "4px"}}
-            [:div {:style {:width "480px"
-                           :height "3em"
-                           :display :flex
-                           :overflow-x :auto
+            [:div {:style {:width       "480px"
+                           :height      "3em"
+                           :display     :flex
+                           :overflow-x  :auto
                            :white-space :nowrap
-                           :border "2px outset gray"}}
-             [:p @selected-request-set]
-             (let [possibilities (sort-by count (keys (dissoc @all-potentials #{})))]
+                           :border      "2px outset gray"}}
+             ;[:p @selected-request-set]
+             (let [possibilities (sort-by count (keys (dissoc @selected-potential-grids #{})))]
                (doall
                  (map (fn [x]
                         ^{:key x} [selector x]) possibilities)))]
             [:button.button.is-danger {:on-click #(prn "COMMIT!")} "Commit!"]]
 
-           [ssg/allocation-grid @potential-grid @colors]]]]]])))
+           [ssg/allocation-grid @selected-potential-grids @colors]]]]]])))
 
 
+
+(comment
+  (def selected-potential-grids @(rf/subscribe [:selected-potential-grids]))
+
+  (keys selected-potential-grids)
+  (get selected-potential-grids #{"l"})
+
+  ())
 
