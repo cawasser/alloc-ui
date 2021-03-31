@@ -9,12 +9,12 @@
 
 
 (defn- set-version [db message]
-  (prn "set-version" message)
+  ;(prn "set-version" message)
   (assoc-in db [:data :last-service-version]
     (get message :service-version)))
 
 (defn- set-sha [db message]
-  (prn "set-version" message)
+  ;(prn "set-sha" message)
   (assoc-in db [:data :last-service-sha]
     (get message :service-sha)))
 
