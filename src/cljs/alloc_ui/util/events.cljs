@@ -127,7 +127,7 @@
     ;  (prn "expounded requests "r)
       {:http-xhrio {:method          :post
                     :uri             "/api/request"
-                    :params          {:requests requests}
+                    :params          {:requests (pr-str requests)}
                     :format          (ajax/json-request-format)
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [:set-potential-grid-from-requests]

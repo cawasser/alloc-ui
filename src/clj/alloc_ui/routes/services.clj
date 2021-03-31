@@ -88,8 +88,8 @@
                                     :service-sha     (get-sha)
                                     :result          (pr-str
                                                        (gs/analyze-combinations
-                                                         ;(clojure.edn/read-string
-                                                                      requests))}})}}]])
+                                                         (clojure.edn/read-string
+                                                           requests)))}})}}]])
 
 (comment
   ; document the flow of data from the request to the "finished product"
