@@ -108,15 +108,15 @@
   :allocate
   (fn-traced [db [_ requests]]
     ;(prn ":allocate " requests)
-    (let [r (into {} (map (partial rs/expound-requests (:db db)) requests))]
-      (prn "expounded requests "r)
+    ;(let [r (into {} (map (partial rs/expound-requests (:db db)) requests))]
+    ;  (prn "expounded requests "r)
       {:http-xhrio {:method          :post
                     :uri             "/api/request"
-                    :params          {:requests (pr-str r)}
+                    :params          {:requests requests}
                     :format          (ajax/json-request-format)
                     :response-format (ajax/json-response-format {:keywords? true})
                     :on-success      [:set-potential-grid-from-requests]
-                    :on-failure      [:common/set-error]}})))
+                    :on-failure      [:common/set-error]}}))
 
 
 (rf/reg-event-db

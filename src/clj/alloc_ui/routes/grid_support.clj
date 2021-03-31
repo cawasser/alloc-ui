@@ -44,7 +44,7 @@
   "transforms raw SQL cell data form the grid table into the correct data
    structure for use with allocation requests"
 
-  (prn "to-grid " (clojure.edn/read-string (:cells (first raw-sql))))
+  ;(prn "to-grid " (clojure.edn/read-string (:cells (first raw-sql))))
   (-> raw-sql
     first
     :cells

@@ -49,17 +49,10 @@
            [:p.title.is-5 {:style {:padding "0.5rem 4rem"}} "Request Candidates"]
            ;(prn "ssg-page (2)" colors)
            [rl/request-grid
-            @requests
-            @potential-requests
-            @combos
-            @colors]]]
-         [:div.tile.is-1]
-         [:div.tile.is-1
-          [:div#req-buttons.container
-           [:button.button.is-info.is-outlined "New"]
-           [:button.button.is-primary.is-outlined {:on-click #(rf/dispatch [:allocate (pr-str @potential-requests)])}
-            "Check"]
-           [:button.button.is-danger "Commit"]]]]]
+            requests
+            potential-requests
+            combos
+            colors]]]]]
 
        [:div.content {:style {:padding "0.70rem 3rem"}}
         [:div.tile.is-ancestor
@@ -76,7 +69,8 @@
             (let [possibilities (keys (dissoc @all-potentials #{}))]
               (doall
                 (map (fn [x]
-                       ^{:key x} [selector x]) possibilities)))]
+                       ^{:key x} [selector x]) possibilities)))
+            [:button.button.is-danger "Commit"]]
 
            [ssg/allocation-grid @potential-grid @colors]]]]]])))
 

@@ -16,5 +16,5 @@
 
 
 (defn color-match [grid requestors]
-  (zipmap (concat (grid-keys grid) (keys requestors)) color-pallet))
+  (zipmap (concat (grid-keys grid) (keys requestors)) (cycle color-pallet)))
 
