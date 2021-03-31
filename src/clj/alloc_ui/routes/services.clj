@@ -91,6 +91,42 @@
                                                          ;(clojure.edn/read-string
                                                                       requests))}})}}]])
 
+(comment
+  ; document the flow of data from the request to the "finished product"
+
+  ; this is NOT real Clojure code, just a sense of how the functions call each other
+
+  ;(-> request
+  ;  grid-support/analyze-combinations
+  ;    (->
+  ;      get-all-the-possible-combinations-of-requests [combo/subsets]
+  ;      turn-the-results-back-into-a-map-for-further-processing [flatten, apply]
+  ;      grid-support/apply-requests-to-grid
+  ;        (->
+  ;===>      sparse-r/generate-acceptable-requests
+  ;          grid-support/null-tx
+  ;          sparse-grid/test-requests)
+  ;      sparse-request-rules/pick-out-results [:adjusted-requests]
+  ;      (into {})))
+
+
+  ; want to move to:
+
+  ;(-> request
+  ;  grid-support/analyze-combinations-multi
+  ;    (->
+  ;      get-all-the-possible-combinations-of-requests [combo/subsets]
+  ;      turn-the-results-back-into-a-map-for-further-processing [flatten, apply]
+  ;      grid-support/apply-requests-to-grid-multi
+  ;        (->
+  ;          (map sparse-r/generate-acceptable-requests-multi)
+  ;          grid-support/null-tx
+  ;          (map (map sparse-grid/test-requests)))
+  ;      sparse-request-rules/pick-out-results [:adjusted-requests]
+  ;      (into {})))
+  ())
+
+
 
 
 (comment

@@ -17,6 +17,24 @@
   {requester (get-in app-db [:data :local :requests requester])})
 
 
+(comment
+  (require '[alloc-ui.dev-db :as d-d])
+  (def app-db {:data {:last-service-version d-d/default-last-service-version
+                      :last-service-sha     d-d/default-last-service-sha
+                      :current              {:grid d-d/current-grid}
+                      :local                {:grid               d-d/potential-grid
+                                             :requests           d-d/requests
+                                             :potential-requests #{}
+                                             :combos             []}}})
+  (def requests #{"j" "k"})
+
+  (expound-requests (:data app-db) (first requests))
+  (expound-requests (:data app-db) (second requests))
+
+  (into {} (map (partial expound-requests (:data app-db)) requests))
+
+  ())
+
 
 (comment
 

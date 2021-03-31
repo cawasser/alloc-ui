@@ -68,22 +68,30 @@
 
      {:adjusted-requests adjusted-reqs
       :tx                (if (empty? adjusted-reqs)
+                           ; TODO: call to null-tx may just need a (map)
                            (null-tx grid requests)
+                           ; TODO: call to sparse-a/test-requests may just need a (map)
                            (sparse-a/test-requests
                              sat-rule
                              rej-rule
                              grid
                              adjusted-reqs))})))
 
+(def testable-requests {})
+(def testable-grid {})
 
-;
 
-; before change
-; ALLOCATE:  "{\"j\" #{[0 0] [[1 2 3] 1]}, \"k\" #{[3 0] [0 2]}, \"l\" #{[[2 3] 0] [[2 3] 2] [[2 3] 1]}, \"m\" #{[[2 3] 2] [[0 1 2] 1]}}"
-; SERVER: {j #{[0 0] [[1 2 3] 1]}, k #{[3 0] [0 2]}, l #{[[2 3] 0] [[2 3] 2] [[2 3] 1]}, m #{[[2 3] 2] [[0 1 2] 1]}}
+(comment
+  (sparse-r/generate-acceptable-requests-multi
+    testable-grid testable-requests)
 
-; after change (expounded-requests)
-; CLIENT: {"k" #{[3 0] [0 2]}, "l" #{[[2 3] 0] [[2 3] 2] [[2 3] 1]}, "m" #{[[2 3] 2] [[0 1 2] 1]}, "j" #{[0 0] [[1 2 3] 1]}}
+  (apply-requests-to-grid-multi
+    testable-requests testable-grid)
+
+  ())
+
+(def last-request (atom {}))
+(def last-grid (atom {}))
 
 (defn analyze-combinations
   "analyses all possible combinations of the individual requests
@@ -96,7 +104,9 @@
                                     clojure.edn/read-string)))
 
   ([requests grid]
-   (log/info "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" requests)
+   (log/info "analyze-combinations" requests)
+   (reset! last-request requests)
+   (reset! last-grid grid)
    (->> requests
 
      ; convert the request map to a collection of vectors so we
@@ -123,6 +133,148 @@
      (into {}))))
 
 
+(defn analyze-combinations-multi
+  "analyses all possible combinations of the individual requests
+  and results into a format for the client to use"
+
+  ([requests]
+   (analyze-combinations-multi requests (-> (db/get-current-grid)
+                                          first
+                                          :cells
+                                          clojure.edn/read-string)))
+
+  ([requests grid]
+   (log/info "analyze-combinations-multi" requests)
+   (reset! last-request requests)
+   (reset! last-grid grid)
+
+   (->> @last-request
+
+     ; convert the request map to a collection of vectors so we
+     ; can use a request as a single datum (rather than a k-v)
+     seq
+
+     ;  gets all the possible combinations of requests
+     combo/subsets
+
+     ; turn the results back into a map for further processing
+     (map (fn [x] (flatten x)))
+     (map (fn [x] (apply hash-map x)))
+
+     (map #(sparse-r/generate-acceptable-requests-multi @last-grid %))
+
+     ;(map (fn [x] (apply-requests-to-grid-multi x @last-grid)))
+     ((fn [adjusted-reqs]
+        {:adjusted-requests adjusted-reqs
+         :tx                (if (empty? adjusted-reqs)
+                              (null-tx @last-grid @last-request)
+                              (map
+                                #(map (partial sparse-a/test-requests
+                                        sat-rule
+                                        rej-rule
+                                        @last-grid) %)
+                                adjusted-reqs))}))
+
+     ; extract the results and reformat them so all the results for each combo are together
+
+     :tx
+     (map #(map (juxt (fn [x] (-> x :reqs keys)) :after) %))
+     (map #(map (fn [[k v]] {(into #{} k) [v]}) %))
+     flatten
+     (apply merge-with clojure.set/union))))
+
+
+(comment
+
+  (analyze-combinations-multi @last-request @last-grid)
+
+  (def part
+    (->> @last-request
+
+      ; convert the request map to a collection of vectors so we
+      ; can use a request as a single datum (rather than a k-v)
+      seq
+
+      ;  gets all the possible combinations of requests
+      combo/subsets
+
+      ; turn the results back into a map for further processing
+      (map (fn [x] (flatten x)))
+      (map (fn [x] (apply hash-map x)))
+
+      (map #(sparse-r/generate-acceptable-requests-multi @last-grid %))
+
+      ;(map (fn [x] (apply-requests-to-grid-multi x @last-grid)))
+      ((fn [adjusted-reqs]
+         {:adjusted-requests adjusted-reqs
+          :tx                (if (empty? adjusted-reqs)
+                               (null-tx @last-grid @last-request)
+                               (map
+                                 #(map (partial sparse-a/test-requests
+                                         sat-rule
+                                         rej-rule
+                                         @last-grid) %)
+                                 adjusted-reqs))}))
+
+      :tx
+      (map #(map (juxt (fn [x] (-> x :reqs keys)) :after) %))
+      (map #(map (fn [[k v]] {(into #{} k) [v]}) %))
+      flatten
+      (apply merge-with clojure.set/union)))
+
+  ;(apply-requests-to-grid-multi part @last-grid)
+
+
+
+
+
+  (into #{} (map #(into #{} (keys (first %)))
+              (:adjusted-requests step-2)))
+
+  ; no we got all the possibilities or
+
+
+  ; trying to get the possibilities organized by the set of requests satisfied
+
+  (map #(map (juxt :reqs :after) %)
+    (-> step-2 :tx))
+
+
+  (def step-4 (map #(map (juxt (fn [x] (-> x :reqs keys)) :after) %)
+                (-> step-2 :tx)))
+  (def step-5 (map #(map (fn [[k v]] {(into #{} k) [v]}) %) step-4))
+  (apply merge-with clojure.set/union (flatten step-5))
+
+
+
+  (->> @last-request
+    seq
+    combo/subsets
+    (map (fn [x] (flatten x)))
+    (map (fn [x] (apply hash-map x))))
+
+  (def s (->> @last-request
+           seq
+           combo/subsets
+           (map (fn [x] (flatten x)))
+           (map (fn [x] (apply hash-map x)))))
+  (map (fn [x] (apply-requests-to-grid-multi x @last-grid)) s)
+
+
+
+
+  (def step-5
+    (->> step-2
+      :tx
+      (map #(map (juxt (fn [x] (-> x :reqs keys)) :after) %))
+      (map #(map (fn [[k v]] {(into #{} k) [v]}) %))
+      flatten
+      (apply merge-with clojure.set/union)))
+
+
+  ())
+
+
 
 (comment
 
@@ -145,6 +297,9 @@
 
   (r/generate-acceptable-requests current-grid sample-requests)
   (apply-requests-to-grid sample-requests current-grid)
+
+  (r/generate-acceptable-requests-multi current-grid sample-requests)
+
 
   (pr-str (apply-requests-to-grid sample-requests current-grid))
 
