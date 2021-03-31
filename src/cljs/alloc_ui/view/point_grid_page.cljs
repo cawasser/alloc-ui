@@ -22,10 +22,10 @@
         ;[:p "colors " (str colors)]]])))
         [:p.title.is-5 {:style {:padding "0.5rem 4rem"}} "Request Candidates"]
         [rl/request-grid
-         @requests
-         @potential-requests
-         @combos
-         @colors]]
+         requests
+         potential-requests
+         combos
+         colors]]
        [:div.content {:style {:padding "0.70rem 3rem"}}
         [:div.tile.is-ancestor
          [:div.tile.is-5

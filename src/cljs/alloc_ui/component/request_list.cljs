@@ -73,10 +73,4 @@
                                       (rf/dispatch-sync [:editing k])
                                       (reset! is-editing true))} txt])])))]]]])))
 
-(defn dyn-request-grid
-  ""
-  [requests potential-requests combos color-match]
-
-  [:div.container
-   [:p "dummy"]])
 

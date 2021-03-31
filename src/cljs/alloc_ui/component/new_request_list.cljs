@@ -63,10 +63,3 @@
   (for [c combos]
     (contains? c k)))
 
-
-
-(defn dyn-request-grid
-  ""
-  [requests potential-requests combos color-match]
-
-  [:p "dummy"])
