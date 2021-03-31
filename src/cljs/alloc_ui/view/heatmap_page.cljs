@@ -2,7 +2,8 @@
   (:require
     [re-frame.core :as rf]
     [alloc-ui.component.heatmap :as hm]
-    [alloc-ui.component.request-list :as rl]))
+    [alloc-ui.component.request-list :as rl]
+    [alloc-ui.component.new-request-list :as nrl]))
 
 
 
@@ -20,7 +21,7 @@
         ;[:p "reqs " (str @requests)]
         ;[:p "colors " (str colors)]]])))
         [:p.title.is-5 {:style {:padding "0.5rem 4rem"}} "Request Candidates"]
-        [rl/dyn-request-grid
+        [nrl/request-grid
          @requests
          @potential-requests
          @combos

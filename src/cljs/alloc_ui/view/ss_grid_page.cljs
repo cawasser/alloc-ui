@@ -76,13 +76,6 @@
          [:div.tile.is-4
           [:div.container
            [:p.title.is-5.has-text-centered "Potential Allocation"]
-           ;[:div {:style {:width "100%" :display :flex}}
-           ; ;[:p @selected-request-set]
-           ; (let [possibilities (keys (dissoc @all-potentials #{}))]
-           ;   (doall
-           ;     (map (fn [x]
-           ;            ^{:key x} [selector x]) possibilities)))
-           ; [:button.button.is-danger "Commit"]]
            [:div {:style {:display :flex :margin-right "4px"}}
             [:div {:style {:width "480px"
                            :height "3em"
@@ -90,7 +83,7 @@
                            :overflow-x :auto
                            :white-space :nowrap
                            :border "2px outset gray"}}
-             ;[:p @selected-request-set]
+             [:p @selected-request-set]
              (let [possibilities (sort-by count (keys (dissoc @all-potentials #{})))]
                (doall
                  (map (fn [x]
