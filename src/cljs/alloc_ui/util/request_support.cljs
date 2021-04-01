@@ -1,6 +1,10 @@
 (ns alloc-ui.util.request-support
-  (:require
-    [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]))
+
+
+(defn generate-new-potentials [requests]
+  (rf/dispatch [:allocate requests]))
+
 
 (defn make-combos
   "combos will be use to determining all the possible combinations of the candidate requests
@@ -22,10 +26,10 @@
   (def app-db {:data {:last-service-version d-d/default-last-service-version
                       :last-service-sha     d-d/default-last-service-sha
                       :current              {:grid d-d/current-grid}
-                      :local                {:grid               d-d/potential-grid
-                                             :requests           d-d/requests
-                                             :potential-requests #{}
-                                             :combos             []}}})
+                      :local                {:all-potential-grids          d-d/potential-grid
+                                             :requests                     d-d/requests
+                                             :requests-under-consideration #{}
+                                             :combos                       []}}})
   (def requests #{"j" "k"})
 
   (expound-requests (:data app-db) (first requests))
@@ -56,10 +60,10 @@
   (def db {:data {:last-service-version default-last-service-version
                   :last-service-sha     default-last-service-sha
                   :current              {:grid current-grid}
-                  :local                {:grid               potential-grid
-                                         :requests           requests
-                                         :potential-requests #{}
-                                         :combos             []}}})
+                  :local                {:all-potential-grids          potential-grid
+                                         :requests                     requests
+                                         :requests-under-consideration #{}
+                                         :combos                       []}}})
 
   (into {}
     (map (partial expound-requests db) #{"k" "l"}))

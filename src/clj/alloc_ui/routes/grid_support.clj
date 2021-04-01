@@ -144,7 +144,7 @@
                                           clojure.edn/read-string)))
 
   ([requests grid]
-   (log/info "analyze-combinations-multi" requests)
+   (log/info "analyze-combinations-multi" (count requests))
    (reset! last-request requests)
    (reset! last-grid grid)
 

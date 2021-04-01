@@ -2,6 +2,7 @@
   (:require
     [day8.re-frame.http-fx]
     [reagent.core :as r]
+    [reagent.dom :as rd]
     [re-frame.core :as rf]
     [markdown.core :refer [md->html]]
     [alloc-ui.ajax :as ajax]
@@ -10,6 +11,7 @@
     [reitit.core :as reitit]
     [alloc-ui.start-up :as start-up]
     [alloc-ui.view.ss-grid-page :as ssg]
+    [alloc-ui.util.request-support :as rs]
     [alloc-ui.view.about-page :as about]
     [alloc-ui.view.heatmap-page :as heatmap]
     [alloc-ui.view.point-grid-page :as point-grid]
@@ -70,7 +72,7 @@
 ;; Initialize app
 (defn mount-components []
   (rf/clear-subscription-cache!)
-  (r/render [#'page] (.getElementById js/document "app")))
+  (rd/render [#'page] (.getElementById js/document "app")))
 
 
 (defn init! []
@@ -79,8 +81,9 @@
 
   (rf/dispatch-sync [:init-db])
   (rf/dispatch-sync [:fetch-current-grid])
-  ;(prn "ALLOCATE" (pr-str @(rf/subscribe [:local-requests])))
-  ;(rf/dispatch [:allocate (pr-str @(rf/subscribe [:local-requests]))])
+  (prn "GETTING STARTING GRIDS" @(rf/subscribe [:local-requests]))
+  (rs/generate-new-potentials @(rf/subscribe [:local-requests]))
+  ;(rf/dispatch [:allocate @(rf/subscribe [:local-requests])])
 
   (start-up/hook-browser-navigation!)
   (mount-components))

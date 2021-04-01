@@ -2,8 +2,8 @@
   (:require
     [reagent.core :as r]
     [re-frame.core :as rf]
-    [alloc-ui.component.dynamic-grid :as grid]))
-
+    [alloc-ui.component.new-requester :as new-requester]
+    [alloc-ui.component.edit-request :as edit-request]))
 
 (defn- any-combo
   ""
@@ -12,138 +12,64 @@
     (contains? c k)))
 
 
-(defn- editable [id txt]
-  (let [toggle-fn #(rf/dispatch-sync [:editing id])]
-    ; TODO: replace the "BLUE" :td with an editable field that dispatches to [:update-request k txt]
-    (fn []
-      (if (= @(rf/subscribe [:editing]) id)
-        [:td {:style {:background-color :cyan} :on-click toggle-fn} txt]
-        [:td {:style {:background-color :white} :on-click toggle-fn} txt]))))
+(def is-new (r/atom false))
 
 (defn request-grid
   ""
   [requests potential-requests combos color-match]
 
   ;(prn "request-grid" requests ;potential-requests combos color-match)
-  [:div.table-container {:style {:width       "100%"
-                                 :height      "15em"
-                                 :overflow-y  :auto
-                                 :white-space :nowrap
-                                 :border      "1px outset gray"}}
-   [:table.table
-    [:thead
-     ; TODO figure out how to do a spanning header across the check marks
-     [:tr [:th "Include?"]
-      ;(for [c combos]
-      ;  ^{:key c} [:th.is-narrow "_"])
-      [:th "Requestor"] [:th "Requests"]]]
-    [:tbody
-     (doall
-       (for [[k r] (seq requests)]
-         (do
-           ;[:p (str {:key k
-           ;          :background-color (first (get color-match k))
-           ;          :color            (second (get color-match k))})
-           ^{:key k}
-           [:tr
-            ;(if (some true? (any-combo combos k))
-            ^{:key (str "inc-" k)}
-            [:td.is-narrow
-             {:on-click #(do
-                           (if (contains? potential-requests k)
-                             (rf/dispatch-sync [:remove-from-local-potential-requests k])
-                             (rf/dispatch-sync [:add-to-local-potential-requests k])))}
+  (let [is-editing (r/atom false)]
+    (fn []
+      [:div
 
-             (if (contains? potential-requests k)
-               [:span.icon.has-text-success.is-small [:i.material-icons :done]]
-               [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
+       [:button.button.is-info.is-outlined {:on-click #(reset! is-new true)} "New"]
 
-            ^{:key (str "all-" k)}
-            [:td {:style {:background-color (first (get color-match k))
-                          :color            (second (get color-match k))}}
-             (str k)]
+       [:div.table-container {:style {:width       "100%"
+                                      :height      "15em"
+                                      :overflow-y  :auto
+                                      :white-space :nowrap
+                                      :border      "1px outset gray"}}
 
-            (let [txt (for [a r] (str a "     "))]
-              ^{:key (str "req-" txt)} [editable k txt])])))]]])
+        [new-requester/pop-up is-new]
+        [edit-request/pop-up is-editing]
 
+        [:table.table
+         [:thead
+          ; TODO figure out how to do a spanning header across the check marks
+          [:tr [:th "Include?"]
+           ;(for [c combos]
+           ;  ^{:key c} [:th.is-narrow "_"])
+           [:th "Requestor"] [:th "Requests"]]]
+         [:tbody
+          (doall
+            (for [[k r] (seq @requests)]
+              (do
+                ;[:p (str {:key k
+                ;          :background-color (first (get color-match k))
+                ;          :color            (second (get color-match k))})
+                ^{:key k}
+                [:tr
+                 ;(if (some true? (any-combo combos k))
+                 ^{:key (str "inc-" k)}
+                 [:td.is-narrow
+                  {:on-click #(do
+                                (if (contains? @potential-requests k)
+                                  (rf/dispatch-sync [:remove-from-local-potential-requests k])
+                                  (rf/dispatch-sync [:add-to-local-potential-requests k])))}
 
+                  (if (contains? @potential-requests k)
+                    [:span.icon.has-text-success.is-small [:i.material-icons :done]]
+                    [:span.icon.has-text-success.is-small [:i.material-icons :crop_square]])]
 
+                 ^{:key (str "all-" k)}
+                 [:td {:style {:background-color (first (get @color-match k))
+                               :color            (second (get @color-match k))}}
+                  (str k)]
 
-
-
-
-
-
-
-
-
-
-
+                 ^{:key (str "req-" r)}
+                 [:td {:on-click #(do
+                                    (rf/dispatch-sync [:editing k])
+                                    (reset! is-editing true))} r]])))]]]])))
 
 
-
-;(def satellites {"1111" {:iron        "1111" :name "sat-1111"
-;                         :type        "Alpha" :in-service "Date"
-;                         :bands       ["X" "Y" "Z"]
-;                         :inclination 10 :lon 50
-;                         :altitude    100}
-;                 "2222" {:iron        "2222" :name "sat-2222"
-;                         :type        "Alpha" :in-service "Date"
-;                         :bands       ["X" "Y" "Z"]
-;                         :inclination 10 :lon 50
-;                         :altitude    100}})
-;
-;(def ex-columns [{:header "Number" :columnKey "number" :width 100}
-;                 {:header "Amount" :columnKey "amount" :width 100}
-;                 {:header "Coeff" :columnKey "coeff" :width 100}
-;                 {:header "Store" :columnKey "store" :width 100}])
-;
-;(defn gen-table
-;  "Generate `size` rows vector of 4 columns vectors to mock up the table."
-;  [size]
-;  (mapv (fn [i]
-;          {"number" i
-;           "amount" (rand-int 1000)
-;           "coeff"  (rand)
-;           "store"  (rand-nth ["Here" "There" "Nowhere" "Somewhere"])})
-;        (range 1 (inc size))))
-;
-
-
-(def columns
-  [{:header "Included?" :columnKey :included :width 100 :fixed true :rendered :check-rendered}
-   ;{:header "a" :columnKey "a" :width 30 :fixed true :rendered :valid-rendered}
-   ;{:header "b" :columnKey "b" :width 30 :fixed true :rendered :valid-rendered}
-   ;{:header "c" :columnKey "c" :width 30 :fixed true :rendered :valid-rendered}
-   {:header "Requestor" :columnKey "allocated-to" :width 100}
-   {:header "Requests" :columnKey "requests" :width 350}])
-
-
-(defn- process-requests
-  ""
-  [requests combos color-match]
-  (for [r requests]
-    (let [[a rs] r]
-      {"included"     :false
-       ;"a"            (any-combo combos a)
-       ;"b"            (any-combo combos a)
-       ;"c"            (any-combo combos a)
-       "allocated-to" a
-       "requests"     rs
-       "bg-color"     (first (get color-match a))
-       "txt-color"    (second (get @color-match a))})))
-
-
-(defn dyn-request-grid
-  ""
-  [requests potential-requests combos color-match]
-
-  (fn []
-
-    (let [p-reqs (process-requests requests @combos color-match)]
-      [:div.container
-       [grid/grid {:num-rows     5
-                   :rowHeight    30
-                   :headerHeight 40
-                   :columns      columns
-                   :data         (into [] p-reqs)}]])))
