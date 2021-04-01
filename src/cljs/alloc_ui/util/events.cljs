@@ -108,8 +108,7 @@
         (assoc-in [:data :local :all-potential-grids] res)
         (assoc-in [:data :local :selected-request-set] #{}) ;(-> res keys "sort" "first valid"))
         (assoc-in [:data :local :selected-request-subset] 0)
-        (assoc-in [:data :local :selected-request-subset-limit]
-          (count (get res (-> res keys second))))))))
+        (assoc-in [:data :local :selected-request-subset-limit] 0)))))
 
 (def last-request (atom {}))
 

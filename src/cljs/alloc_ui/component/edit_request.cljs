@@ -11,7 +11,7 @@
   ; TODO: make :new-requester a reg-event-fx to send the data to the server and round-trip
   :edit-requests
   (fn-traced [db [_ requester requests]]
-    (let [result (assoc-in db [:data :local :requests requester] requests)]
+    (let [result (assoc-in db [:data :local :requests requester] (edn/read-string requests))]
       (rs/generate-new-potentials (get-in result [:data :local :requests]))
       result)))
 
