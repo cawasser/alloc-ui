@@ -2,10 +2,78 @@
   (:require
     [reagent.core :as r]
     [re-frame.core :as rf]
+    [day8.re-frame.tracing :refer-macros [fn-traced]]
     [alloc-ui.util.subs]
     [alloc-ui.component.super-simple-grid :as ssg]
     [alloc-ui.component.request-list :as rl]))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Event Handlers and Subscriptions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(rf/reg-event-db
+  :selected-request-set
+  (fn-traced [db [_ new-selection]]
+    (prn ":selected-request-set" new-selection (count (get-in db [:data :local :all-potential-grids new-selection])))
+    (-> db
+      (assoc-in [:data :local :selected-request-set] new-selection)
+      (assoc-in [:data :local :selected-request-subset] 0)
+      (assoc-in [:data :local :selected-request-subset-limit]
+        (count (get-in db [:data :local :all-potential-grids new-selection]))))))
+
+
+(rf/reg-event-db
+  :inc-selected-request-subset
+  (fn-traced [db [_]]
+    (let [n (-> db :data :local :selected-request-subset inc)]
+      (prn ":inc-selected-request-subset" n (-> db :data :local :selected-request-subset-limit))
+      (if (< n (-> db :data :local :selected-request-subset-limit))
+        (assoc-in db [:data :local :selected-request-subset] n)
+        db))))
+
+
+(rf/reg-event-db
+  :dec-selected-request-subset
+  (fn-traced [db [_]]
+    (let [n (-> db :data :local :selected-request-subset dec)]
+      (prn ":dec-selected-request-subset" n)
+      (if (<= 0 n)
+        (assoc-in db [:data :local :selected-request-subset] n)
+        db))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(rf/reg-sub
+  :selected-request-set
+  (fn [db _]
+    (-> db :data :local :selected-request-set)))
+
+
+(rf/reg-sub
+  :selected-request-subset
+  (fn [db _]
+    (-> db :data :local :selected-request-subset)))
+
+
+(rf/reg-sub
+  :selected-request-subset-limit
+  (fn [db _]
+    (-> db :data :local :selected-request-subset-limit)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; UI Implementation
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- selector
   "selection is the string denoting the collection of requesters associated
@@ -29,7 +97,7 @@
         click-fn                #(do
                                    (prn "click" selection)
                                    (rf/dispatch [:selected-request-set selection]))]
-    (prn "selector" selection selected-request-subset upper-limit low-limit up-limit)
+    ;(prn "selector" selection selected-request-subset upper-limit low-limit up-limit)
     [:div {:style {:display :flex :margin-right "4px"
                    :border  "0.5px" :border-radius ".5px"}}
      [:button.button {:class color :on-click dec-fn :disabled (or not-me low-limit)} "<"]
@@ -40,14 +108,14 @@
   ""
   []
   (let [current-grid                 (rf/subscribe [:current-grid])
-        potential-grid               (rf/subscribe [:local-grid])
-        all-potentials               (rf/subscribe [:all-potential-grids])
+        ;potential-grid               (rf/subscribe [:local-grid])
+        ;all-potentials               (rf/subscribe [:all-potential-grids])
         requests                     (rf/subscribe [:local-requests])
         requests-under-consideration (rf/subscribe [:requests-under-consideration])
         colors                       (rf/subscribe [:color-matching])
         combos                       (rf/subscribe [:local-combos])
         selected-request-set         (rf/subscribe [:selected-request-set])
-        selected-potential-grids (rf/subscribe [:selected-potential-grids])]
+        selected-potential-grids     (rf/subscribe [:selected-potential-grids])]
 
 
     (fn []
@@ -92,7 +160,10 @@
                         ^{:key x} [selector x]) possibilities)))]
             [:button.button.is-danger {:on-click #(prn "COMMIT!")} "Commit!"]]
 
-           [ssg/allocation-grid @selected-potential-grids @colors]]]]]])))
+           (let [selected-request-subset (rf/subscribe [:selected-request-subset])
+                 grid-to-show            (get-in @selected-potential-grids
+                                           [@selected-request-set @selected-request-subset])]
+             [ssg/allocation-grid grid-to-show @colors])]]]]])))
 
 
 
@@ -101,6 +172,13 @@
 
   (keys selected-potential-grids)
   (get selected-potential-grids #{"l"})
+
+
+  (def selected-potential-grids (rf/subscribe [:selected-potential-grids]))
+  (def selected-request-set (rf/subscribe [:selected-request-set]))
+  (def selected-request-subset (rf/subscribe [:selected-request-subset]))
+  (def grid-to-show (get-in @selected-potential-grids
+                      [@selected-request-set @selected-request-subset]))
 
   ())
 

@@ -58,17 +58,22 @@
 (rf/reg-event-db
   :add-to-local-potential-requests
   (fn-traced [db [_ k]]
-    (assoc-in db [:data :local :requests-under-consideration]
-      (conj (-> db :data :local :requests-under-consideration)
-        k))))
+    (let [orig (-> db :data :local :requests-under-consideration)]
+      (-> db
+        (assoc-in [:data :local :requests-under-consideration]
+          (conj orig k))
+        (assoc-in [:data :local :selected-request-set] #{})))))
 
 
 (rf/reg-event-db
   :remove-from-local-potential-requests
   (fn-traced [db [_ k]]
-    (assoc-in db [:data :local :requests-under-consideration]
-      (disj (-> db :data :local :requests-under-consideration)
-        k))))
+    (let [orig (-> db :data :local :requests-under-consideration)]
+      (-> db
+        (assoc-in [:data :local :requests-under-consideration]
+          (disj orig k))
+        (assoc-in [:data :local :selected-request-set] #{})))))
+
 
 (rf/reg-event-db
   :set-current-grid
@@ -118,52 +123,15 @@
 (rf/reg-event-fx
   :allocate
   (fn-traced [db [_ requests]]
-    (prn ":allocate" requests)                              ;"/////" (:db db))
-    (let [ex (internal-ex db requests)]
-      (prn "expounded requests " ex)
-      (reset! last-request ex)
-      ;(prn ":allocate " requests)
-      ;(let [r (into {} (map (partial rs/expound-requests (:db db)) requests))]
-      ;  (prn "expounded requests "r)
-      {:http-xhrio {:method          :post
-                    :uri             "/api/request"
-                    :params          {:requests (pr-str requests)}
-                    :format          (ajax/json-request-format)
-                    :response-format (ajax/json-response-format {:keywords? true})
-                    :on-success      [:set-potential-grid-from-requests]
-                    :on-failure      [:common/set-error]}})))
-
-
-(rf/reg-event-db
-  :selected-request-set
-  (fn-traced [db [_ new-selection]]
-    (prn ":selected-request-set" new-selection (count (get-in db [:data :local :all-potential-grids new-selection])))
-    (-> db
-      (assoc-in [:data :local :selected-request-set] new-selection)
-      (assoc-in [:data :local :selected-request-subset] 0)
-      (assoc-in [:data :local :selected-request-subset-limit]
-        (count (get-in db [:data :local :all-potential-grids new-selection]))))))
-
-
-
-(rf/reg-event-db
-  :inc-selected-request-subset
-  (fn-traced [db [_]]
-    (let [n (-> db :data :local :selected-request-subset inc)]
-      (prn ":inc-selected-request-subset" n (-> db :data :local :selected-request-subset-limit))
-      (if (< n (-> db :data :local :selected-request-subset-limit))
-        (assoc-in db [:data :local :selected-request-subset] n)
-        db))))
-
-
-(rf/reg-event-db
-  :dec-selected-request-subset
-  (fn-traced [db [_]]
-    (let [n (-> db :data :local :selected-request-subset dec)]
-      (prn ":dec-selected-request-subset" n)
-      (if (<= 0 n)
-        (assoc-in db [:data :local :selected-request-subset] n)
-        db))))
+    (prn ":allocate" requests)
+    (reset! last-request requests)
+    {:http-xhrio {:method          :post
+                  :uri             "/api/request"
+                  :params          {:requests (pr-str requests)}
+                  :format          (ajax/json-request-format)
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:set-potential-grid-from-requests]
+                  :on-failure      [:common/set-error]}}))
 
 
 (rf/reg-event-db

@@ -36,22 +36,6 @@
       (get all-local-grid #{}))))
 
 
-(rf/reg-sub
-  :selected-request-subset
-  (fn [db _]
-    (-> db :data :local :selected-request-subset)))
-
-(rf/reg-sub
-  :selected-request-set
-  (fn [db _]
-    (-> db :data :local :selected-request-set)))
-
-(rf/reg-sub
-  :selected-request-subset-limit
-  (fn [db _]
-    (-> db :data :local :selected-request-subset-limit)))
-
-
 
 (rf/reg-sub
   :local-requests
