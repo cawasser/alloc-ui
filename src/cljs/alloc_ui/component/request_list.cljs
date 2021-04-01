@@ -67,10 +67,9 @@
                                :color            (second (get @color-match k))}}
                   (str k)]
 
-                 (let [txt (for [a r] (str a "     "))]
-                   ^{:key (str "req-" txt)}
-                   [:td {:on-click #(do
-                                      (rf/dispatch-sync [:editing k])
-                                      (reset! is-editing true))} txt])])))]]]])))
+                 ^{:key (str "req-" r)}
+                 [:td {:on-click #(do
+                                    (rf/dispatch-sync [:editing k])
+                                    (reset! is-editing true))} r]])))]]]])))
 
 

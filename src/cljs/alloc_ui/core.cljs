@@ -11,6 +11,7 @@
     [reitit.core :as reitit]
     [alloc-ui.start-up :as start-up]
     [alloc-ui.view.ss-grid-page :as ssg]
+    [alloc-ui.util.request-support :as rs]
     [alloc-ui.view.about-page :as about]
     [alloc-ui.view.heatmap-page :as heatmap]
     [alloc-ui.view.point-grid-page :as point-grid]
@@ -80,8 +81,9 @@
 
   (rf/dispatch-sync [:init-db])
   (rf/dispatch-sync [:fetch-current-grid])
-  (prn "ALLOCATE" @(rf/subscribe [:local-requests]))
-  (rf/dispatch [:allocate @(rf/subscribe [:local-requests])])
+  (prn "GETTING STARTING GRIDS" @(rf/subscribe [:local-requests]))
+  (rs/generate-new-potentials @(rf/subscribe [:local-requests]))
+  ;(rf/dispatch [:allocate @(rf/subscribe [:local-requests])])
 
   (start-up/hook-browser-navigation!)
   (mount-components))

@@ -1,6 +1,10 @@
 (ns alloc-ui.util.request-support
-  (:require
-    [re-frame.core :as rf]))
+  (:require [re-frame.core :as rf]))
+
+
+(defn generate-new-potentials [requests]
+  (rf/dispatch [:allocate requests]))
+
 
 (defn make-combos
   "combos will be use to determining all the possible combinations of the candidate requests

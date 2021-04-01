@@ -19,7 +19,7 @@
 (rf/reg-event-db
   :selected-request-set
   (fn-traced [db [_ new-selection]]
-    (prn ":selected-request-set" new-selection (count (get-in db [:data :local :all-potential-grids new-selection])))
+    ;(prn ":selected-request-set" new-selection (count (get-in db [:data :local :all-potential-grids new-selection])))
     (-> db
       (assoc-in [:data :local :selected-request-set] new-selection)
       (assoc-in [:data :local :selected-request-subset] 0)
@@ -31,7 +31,7 @@
   :inc-selected-request-subset
   (fn-traced [db [_]]
     (let [n (-> db :data :local :selected-request-subset inc)]
-      (prn ":inc-selected-request-subset" n (-> db :data :local :selected-request-subset-limit))
+      ;(prn ":inc-selected-request-subset" n (-> db :data :local :selected-request-subset-limit))
       (if (< n (-> db :data :local :selected-request-subset-limit))
         (assoc-in db [:data :local :selected-request-subset] n)
         db))))
@@ -41,7 +41,7 @@
   :dec-selected-request-subset
   (fn-traced [db [_]]
     (let [n (-> db :data :local :selected-request-subset dec)]
-      (prn ":dec-selected-request-subset" n)
+      ;(prn ":dec-selected-request-subset" n)
       (if (<= 0 n)
         (assoc-in db [:data :local :selected-request-subset] n)
         db))))
@@ -89,13 +89,13 @@
                                   "is-small is-light is-info"
                                   "is-small is-light")
         inc-fn                  #(do
-                                   (prn ":inc-selected-request-subset")
+                                   ;(prn ":inc-selected-request-subset")
                                    (rf/dispatch [:inc-selected-request-subset]))
         dec-fn                  #(do
-                                   (prn ":dec-selected-request-subset")
+                                   ;(prn ":dec-selected-request-subset")
                                    (rf/dispatch [:dec-selected-request-subset]))
         click-fn                #(do
-                                   (prn "click" selection)
+                                   ;(prn "click" selection)
                                    (rf/dispatch [:selected-request-set selection]))]
     ;(prn "selector" selection selected-request-subset upper-limit low-limit up-limit)
     [:div {:style {:display :flex :margin-right "4px"

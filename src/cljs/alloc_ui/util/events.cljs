@@ -101,12 +101,12 @@
   (fn-traced [db [_ results]]
     ;(prn ":set-potential-grid-from-requests" results)
     (let [res (cljs.reader/read-string (:result results))]
-      (prn ":set-potential-grid-from-requests" (-> res keys second) (count (get res (-> res keys second))))
+      ;(prn ":set-potential-grid-from-requests" (-> res keys second) (count (get res (-> res keys second))))
       (-> db
         (set-version results)
         (set-sha results)
         (assoc-in [:data :local :all-potential-grids] res)
-        (assoc-in [:data :local :selected-request-set] (-> res keys second))
+        (assoc-in [:data :local :selected-request-set] #{}) ;(-> res keys "sort" "first valid"))
         (assoc-in [:data :local :selected-request-subset] 0)
         (assoc-in [:data :local :selected-request-subset-limit]
           (count (get res (-> res keys second))))))))
@@ -158,15 +158,6 @@
       (assoc-in [:data :local :editing-requests] (get-in db [:data :local :requests id])))))
 
 
-(rf/reg-event-db
-  ; TODO: make :new-requester a reg-event-fx to send the data to the server and round-trip
-  :new-requester
-  (fn-traced [db [_ requester requests]]
-    (assoc-in db [:data :local :requests requester] requests)))
 
 
-(rf/reg-event-db
-  ; TODO: make :new-requester a reg-event-fx to send the data to the server and round-trip
-  :edit-requests
-  (fn-traced [db [_ requester requests]]
-    (assoc-in db [:data :local :requests requester] requests)))
+
