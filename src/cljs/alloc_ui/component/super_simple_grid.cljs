@@ -8,9 +8,30 @@
    (str ch "-" ts)))
 
 
+(defn- calc-grid-extents
+  "takes a grid and returns a vector of [width height]"
+  [grid]
+
+  ;(prn "-------------- calc-grid-extents" grid)
+  (if (or (nil? grid) (empty? grid))
+    [3 3]
+
+    (let [width (->> grid
+                  vals
+                  (map :channel)
+                  (apply max)
+                  inc)
+          height (->> grid
+                   vals
+                   (map :timeslot)
+                   (apply max)
+                   inc)]
+
+      [width height])))
+
 (defn allocation-grid [grid color-match]
   ; TODO: make the grid whatever size it needs to be
-  (let [w 5 h 5]
+  (let [[w h] (calc-grid-extents grid)]
     [:table.table
      [:thead
       [:tr [:th ""]

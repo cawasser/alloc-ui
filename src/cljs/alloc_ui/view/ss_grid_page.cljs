@@ -104,6 +104,15 @@
      [:button.button {:class color :on-click click-fn} (str selection)]
      [:button.button {:class color :on-click inc-fn :disabled (or not-me up-limit)} ">"]]))
 
+
+(comment
+  (def selected-potential-grids     (rf/subscribe [:selected-potential-grids]))
+  (def possibilities (sort-by count (keys (dissoc @selected-potential-grids #{}))))
+
+
+  ())
+
+
 (defn ssg-page
   ""
   []
@@ -154,7 +163,7 @@
                            :white-space :nowrap
                            :border      "2px outset gray"}}
              ;[:p @selected-request-set]
-             (let [possibilities (sort-by count (keys (dissoc @selected-potential-grids #{})))]
+             (let [possibilities (sort-by count > (keys (dissoc @selected-potential-grids #{})))]
                (doall
                  (map (fn [x]
                         ^{:key x} [selector x]) possibilities)))]
