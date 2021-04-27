@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "highlight.js": "9.18.1",
+    "highlight.js": "10.4.1",
     "react": "16.14.0",
     "react-data-grid": "^7.0.0-canary.38",
     "react-data-grid-addons": "^7.0.0-alpha.24",
