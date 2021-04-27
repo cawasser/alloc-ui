@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "highlight.js": "9.18.1",
+    "react": "16.14.0",
+    "react-data-grid": "^7.0.0-canary.38",
+    "react-data-grid-addons": "^7.0.0-alpha.24",
+    "react-dom": "16.14.0",
+    "react-highlight.js": "1.0.7"
+  }
+}
